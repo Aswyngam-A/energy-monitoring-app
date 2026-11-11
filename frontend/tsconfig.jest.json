@@ -1,0 +1,9 @@
+// frontend/tsconfig.jest.json
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "verbatimModuleSyntax": false,
+    "module": "CommonJS",
+    "moduleResolution": "Node"
+  }
+}

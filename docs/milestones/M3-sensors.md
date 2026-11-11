@@ -1,0 +1,34 @@
+# M3 — Sensors
+
+**Status:** Not started
+
+## Goal
+Sensors can be registered to a site and are listed on the site page.
+
+## In scope
+| Item | Mode |
+|---|---|
+| `Sensor` entity with `@ManyToOne Site` + migration | L (first relationship), S (migration) |
+| Nested endpoints under a site | S |
+| Backend tests (201, 400, 404 for unknown site) | S |
+| Frontend `api/sensors.ts` + sensors section and add-sensor form on site detail page | S |
+| Frontend tests | S |
+| e2e: register a sensor on a site | S |
+
+## API contract (draft)
+- `POST /api/v1/sites/{siteId}/sensors` `{ name, type? }` → 201 / 400 / 404
+- `GET /api/v1/sites/{siteId}/sensors` → 200 / 404
+- `GET /api/v1/sensors/{id}` → 200 / 404
+
+## Concepts you'll meet
+JPA relationships and foreign keys, lazy loading pitfalls when mapping to DTOs, nested REST resources; composing components on a page.
+
+## Decide here
+- Sensor authentication (proposal: none for this practice app).
+- Sensor fields beyond name.
+
+## Definition of done
+All three CLAUDE.md checks green, output pasted, progress.md updated.
+
+## Status log
+- 2026-11-11 — Created.

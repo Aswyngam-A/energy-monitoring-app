@@ -1,0 +1,15 @@
+# Dependencies and build output
+node_modules/
+target/
+dist/
+
+# Playwright output
+e2e/test-results/
+e2e/playwright-report/
+
+# Local env / editor
+.env
+.env.*
+.idea/
+.vscode/
+*.log
