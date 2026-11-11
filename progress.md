@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M1a — Local foundations (not started)
+**Current milestone:** M1a — Local foundations (in progress)
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -13,7 +13,7 @@
 ## Milestones
 | # | Milestone | Status | File |
 |---|---|---|---|
-| M1a | Local foundations | Not started | [docs/milestones/M1a-local-foundations.md](docs/milestones/M1a-local-foundations.md) |
+| M1a | Local foundations | In progress | [docs/milestones/M1a-local-foundations.md](docs/milestones/M1a-local-foundations.md) |
 | M1b | Running it together | Not started | [docs/milestones/M1b-running-together.md](docs/milestones/M1b-running-together.md) |
 | M2 | Sites | Not started | [docs/milestones/M2-sites.md](docs/milestones/M2-sites.md) |
 | M3 | Sensors | Not started | [docs/milestones/M3-sensors.md](docs/milestones/M3-sensors.md) |
@@ -25,7 +25,7 @@
 ## Open questions (decide when the milestone needs them)
 | Question | Decide in |
 |---|---|
-| Test DB: Quarkus Dev Services (needs Docker) or something else | M1a |
+| ~~Test DB~~ → **Quarkus Dev Services (PostgreSQL 18 in Docker)**, decided 2026-11-11 | M1a ✓ |
 | Error response body shape for 400/404 | M1a |
 | Frontend → API: Vite dev proxy or `VITE_API_URL`; CORS | M1a / M1b |
 | CI triggers and jobs; does CI run e2e? | M1b |
@@ -39,6 +39,8 @@
 
 ## Log
 - 2026-11-11 — Planning docs created. Verified frontend tooling: `ts-jest@29.4.15` supports `jest@30` (peer `^29 || ^30`), `npm run check` green, no version change needed. Git repo initialised locally.
+- 2026-11-11 — Initial commit `d70d1bb` pushed to `origin/main`. M1a started (step 1: backend persistence dependencies, learning mode).
+- 2026-11-11 — M1a step 1 done (written by user, no corrections): Panache, JDBC PostgreSQL, Flyway (+ flyway-postgresql) added; datasource kind, Flyway migrate-at-start, Hibernate schema strategy `none` configured. `./mvnw verify` green with Dev Services.
 
 ## Known issues / blocked
 - None.

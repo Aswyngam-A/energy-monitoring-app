@@ -44,3 +44,4 @@ Quarkus extensions & profiles, CDI (`@ApplicationScoped`), JAX-RS resources, Jav
 
 ## Status log
 - 2026-11-11 — Created.
+- 2026-11-11 — Step 1 (persistence dependencies + config) done by user, reviewed, `./mvnw verify` green. Decision: tests use Dev Services.
