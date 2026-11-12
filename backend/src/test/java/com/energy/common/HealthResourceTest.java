@@ -12,7 +12,6 @@ import static org.hamcrest.CoreMatchers.is;
 class HealthResourceTest {
 
     @Test
-
     void healthEndpointUP() {
         given()
             .when().get()

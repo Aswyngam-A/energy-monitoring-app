@@ -33,7 +33,7 @@ Quarkus extensions & profiles, CDI (`@ApplicationScoped`), JAX-RS resources, Jav
 
 ## Decide here
 - Test DB: Dev Services (needs Docker running) or other.
-- Error body shape (proposal: `{ "status": 400, "error": "Bad Request", "details": ["..."] }`).
+- ~~Error body shape~~ → decided 2026-11-12: `{ "status": 404, "error": "Not Found", "message": "...", "details": [] }`. `details` is always a list (empty when unused). Validation errors fill `details` in M2; catch-all 500 mapper deferred to M7.
 - Vite dev proxy for `/api` vs `VITE_API_URL`.
 
 ## Definition of done
@@ -46,3 +46,4 @@ Quarkus extensions & profiles, CDI (`@ApplicationScoped`), JAX-RS resources, Jav
 - 2026-11-11 — Created.
 - 2026-11-11 — Step 1 (persistence dependencies + config) done by user, reviewed, `./mvnw verify` green. Decision: tests use Dev Services.
 - 2026-11-12 — Step 2 (health endpoint + first @QuarkusTest) done by user, reviewed, `./mvnw verify` green. Lessons: class name vs file name, static imports, package = folder, `quarkus.rest.path` vs RestAssured base path, `@TestHTTPEndpoint`. Found: `*IT` tests were skipped by `skipITs=true` in the pom → enabled (`skipITs=false`); IT now runs and passes.
+- 2026-11-12 — Step 3 (error record + exception mapper) done by user, reviewed, `./mvnw verify` green. Lessons: `int` vs `Number`, `List` vs arrays in records, `@ServerExceptionMapper`, building a `Response`. Mapper to be revisited in M2.
