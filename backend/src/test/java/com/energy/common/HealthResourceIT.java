@@ -1,8 +1,7 @@
-package com.energy;
-
+package com.energy.common;
 import io.quarkus.test.junit.QuarkusIntegrationTest;
 
 @QuarkusIntegrationTest
-class GreetingResourceIT extends GreetingResourceTest {
+class HealthResourceIT extends HealthResourceTest {
     // Execute the same tests but in packaged mode.
 }

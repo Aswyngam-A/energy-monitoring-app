@@ -45,3 +45,4 @@ Quarkus extensions & profiles, CDI (`@ApplicationScoped`), JAX-RS resources, Jav
 ## Status log
 - 2026-11-11 — Created.
 - 2026-11-11 — Step 1 (persistence dependencies + config) done by user, reviewed, `./mvnw verify` green. Decision: tests use Dev Services.
+- 2026-11-12 — Step 2 (health endpoint + first @QuarkusTest) done by user, reviewed, `./mvnw verify` green. Lessons: class name vs file name, static imports, package = folder, `quarkus.rest.path` vs RestAssured base path, `@TestHTTPEndpoint`. Found: `*IT` tests were skipped by `skipITs=true` in the pom → enabled (`skipITs=false`); IT now runs and passes.
