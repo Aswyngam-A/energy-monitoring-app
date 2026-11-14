@@ -53,5 +53,7 @@
 - 2026-11-14 — M1a step 5 done (written by user, reviewed): `Layout` (header, `NavLink`, `Outlet`), `NotFoundPage`, routes in `App.tsx`, `BrowserRouter` in `main.tsx`, tests with `MemoryRouter` + mocked API. `npm run check` green (3 suites, 5 tests); user confirmed the browser check. Backend re-verify not possible today: Docker Desktop was not running (Dev Services needs it). Last green backend verify: 2026-11-12, backend unchanged since.
 - 2026-11-14 — **M1a done.** Docker back up: `./mvnw verify` green (ErrorMapper + HealthResource, Test + IT, 4 tests); `npm run check` green (5 tests). e2e starts in M1b.
 
+- 2026-11-15 — M1b steps 1–3 done (written by user, reviewed): multi-stage backend Dockerfile, frontend Dockerfile + `nginx.conf` (reverse proxy `/api/` → `api:8080`, SPA fallback), `docker-compose.yml` (db with healthcheck + volume, api, web on :3000). Stack verified: health through nginx returns UP, Flyway connects to Postgres. Decision: reverse proxy, not CORS. Fixed `npm run typecheck` (`tsc -b`; verified it fails on a deliberate error). Next: CI backend + frontend jobs, then e2e, then e2e job.
+
 ## Known issues / blocked
-- `npm run typecheck` runs `tsc --noEmit` against the root `tsconfig.json`, which has `files: []` and only references, so it likely checks nothing. `tsc -p tsconfig.app.json --noEmit` is the real check. To fix in a small separate change (not yet done).
+- None.
