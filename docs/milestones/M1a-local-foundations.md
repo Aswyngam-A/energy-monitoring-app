@@ -1,6 +1,6 @@
 # M1a — Local foundations
 
-**Status:** Not started
+**Status:** Done (2026-11-14)
 
 ## Goal
 Backend and frontend can talk to each other locally: the backend has persistence wired and a health endpoint, the frontend calls it through Axios and shows the result on a routed page. No business feature yet.
@@ -47,3 +47,4 @@ Quarkus extensions & profiles, CDI (`@ApplicationScoped`), JAX-RS resources, Jav
 - 2026-11-11 — Step 1 (persistence dependencies + config) done by user, reviewed, `./mvnw verify` green. Decision: tests use Dev Services.
 - 2026-11-12 — Step 2 (health endpoint + first @QuarkusTest) done by user, reviewed, `./mvnw verify` green. Lessons: class name vs file name, static imports, package = folder, `quarkus.rest.path` vs RestAssured base path, `@TestHTTPEndpoint`. Found: `*IT` tests were skipped by `skipITs=true` in the pom → enabled (`skipITs=false`); IT now runs and passes.
 - 2026-11-12 — Step 3 (error record + exception mapper) done by user, reviewed, `./mvnw verify` green. Lessons: `int` vs `Number`, `List` vs arrays in records, `@ServerExceptionMapper`, building a `Response`. Mapper to be revisited in M2.
+- 2026-11-14 — Steps 4 (Axios client + Home page) and 5 (React Router + Layout) done by user, reviewed. Pinned `react-router@^7` (v8 is ESM-only and Jest could not load it). Jest config: `moduleResolution: Bundler`, Node types, `TextEncoder` polyfill. Both checks green → **M1a done**.

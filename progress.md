@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M1a — Local foundations (in progress)
+**Current milestone:** M1b — Running it together (not started)
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -13,7 +13,7 @@
 ## Milestones
 | # | Milestone | Status | File |
 |---|---|---|---|
-| M1a | Local foundations | In progress | [docs/milestones/M1a-local-foundations.md](docs/milestones/M1a-local-foundations.md) |
+| M1a | Local foundations | Done | [docs/milestones/M1a-local-foundations.md](docs/milestones/M1a-local-foundations.md) |
 | M1b | Running it together | Not started | [docs/milestones/M1b-running-together.md](docs/milestones/M1b-running-together.md) |
 | M2 | Sites | Not started | [docs/milestones/M2-sites.md](docs/milestones/M2-sites.md) |
 | M3 | Sensors | Not started | [docs/milestones/M3-sensors.md](docs/milestones/M3-sensors.md) |
@@ -49,5 +49,9 @@
 - 2026-11-12 — M1a frontend split in two: step 4 = Axios + API client + Home page showing health; step 5 = React Router + Layout. Step 4 started.
 - 2026-11-14 — M1a step 4 done (written by user, reviewed): Axios installed, `api/client.ts` (instance, baseURL `/api/v1`), `api/health.ts`, `pages/HomePage.tsx` (loading / data / error), `HomePage.test.tsx` with mocked API, Vite demo + `App.test.tsx` removed. `npm run check` green (2 tests). Open: stray `”` in error text, unused `error` state value, manual browser check not yet confirmed. Note: user changed the error test from `/error/i` text to `findByRole('alert')` — accepted since it was the optional suggestion, but flagged.
 
+- 2026-11-14 — M1a step 5 in progress. User wrote Layout/App tests + stubs. Jest could not load `react-router@8` (ESM-only, `import.meta`): after 3 failed config attempts, decided to pin `react-router@^7.18.5` (CommonJS). Jest config kept: `moduleResolution: Bundler` + `types` incl. `node` in `tsconfig.jest.json`, `TextEncoder`/`TextDecoder` polyfill in `jest.setup.ts`. Remaining failures are the intended red tests (stubs render null).
+- 2026-11-14 — M1a step 5 done (written by user, reviewed): `Layout` (header, `NavLink`, `Outlet`), `NotFoundPage`, routes in `App.tsx`, `BrowserRouter` in `main.tsx`, tests with `MemoryRouter` + mocked API. `npm run check` green (3 suites, 5 tests); user confirmed the browser check. Backend re-verify not possible today: Docker Desktop was not running (Dev Services needs it). Last green backend verify: 2026-11-12, backend unchanged since.
+- 2026-11-14 — **M1a done.** Docker back up: `./mvnw verify` green (ErrorMapper + HealthResource, Test + IT, 4 tests); `npm run check` green (5 tests). e2e starts in M1b.
+
 ## Known issues / blocked
-- None.
+- `npm run typecheck` runs `tsc --noEmit` against the root `tsconfig.json`, which has `files: []` and only references, so it likely checks nothing. `tsc -p tsconfig.app.json --noEmit` is the real check. To fix in a small separate change (not yet done).
