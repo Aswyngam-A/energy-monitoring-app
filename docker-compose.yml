@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: energywatch
+      POSTGRES_USER: energywatch
+      POSTGRES_PASSWORD: energywatch
+    volumes:
+      - energywatch-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U energywatch -d energywatch"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./backend
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://db:5432/energywatch
+      QUARKUS_DATASOURCE_USERNAME: energywatch
+      QUARKUS_DATASOURCE_PASSWORD: energywatch
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+volumes:
+  energywatch-db-data:
