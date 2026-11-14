@@ -28,7 +28,8 @@
 | ~~Test DB~~ → **Quarkus Dev Services (PostgreSQL 18 in Docker)**, decided 2026-11-11 | M1a ✓ |
 | ~~Error body shape~~ → **`{ status, error, message, details[] }`** (custom record, not RFC 9457), decided 2026-11-12 | M1a ✓ |
 | ~~Run `*IT` tests in verify?~~ → **Yes**, `skipITs=false` in pom, decided 2026-11-12 | M1a ✓ |
-| Frontend → API: Vite dev proxy or `VITE_API_URL`; CORS | M1a / M1b |
+| ~~Frontend → API in dev~~ → **Vite proxy** `/api` → `localhost:8080` (already in `vite.config.ts`), Axios uses relative `/api/v1`, decided 2026-11-12 | M1a ✓ |
+| How the frontend container reaches the API (proxy vs CORS) | M1b |
 | CI triggers and jobs; does CI run e2e? | M1b |
 | E2E data reset between tests | M1b |
 | Sensor auth (none assumed) | M3 |
@@ -44,7 +45,9 @@
 - 2026-11-11 — M1a step 1 done (written by user, no corrections): Panache, JDBC PostgreSQL, Flyway (+ flyway-postgresql) added; datasource kind, Flyway migrate-at-start, Hibernate schema strategy `none` configured. `./mvnw verify` green with Dev Services.
 - 2026-11-12 — M1a step 2 done (written by user, reviewed): `GET /api/v1/health` via `quarkus.rest.path=/api/v1`, `HealthResponse` record, `HealthResourceTest` with `@TestHTTPEndpoint`, Greeting scaffold removed. Duplicate nested `HealthResponse` removed by user.
 - 2026-11-12 — Enabled integration tests (`skipITs=false`). `./mvnw verify` green: `HealthResourceTest` (Surefire) + `HealthResourceIT` (Failsafe, packaged app).
-- 2026-11-12 — M1a step 3 done (written by user with step-by-step guidance): `ErrorResponse` record + `ErrorMapper` (`@ServerExceptionMapper` for `WebApplicationException`), `ErrorMapperTest`/`IT`. `./mvnw verify` green (2 + 2 tests). User not yet fully at ease with the mapper → revisit when M2 throws its first `NotFoundException`.
+- 2026-11-12 — M1a step 3 done (written by user with step-by-step guidance): `ErrorResponse` record + `ErrorMapper` (`@ServerExceptionMapper` for `WebApplicationException`), `ErrorMapperTest`/`IT`. `./mvnw verify` green (2 + 2 tests). User not yet fully at ease with the mapper → revisit when M2 throws its first `NotFoundException`. Committed `10964c3`.
+- 2026-11-12 — M1a frontend split in two: step 4 = Axios + API client + Home page showing health; step 5 = React Router + Layout. Step 4 started.
+- 2026-11-14 — M1a step 4 done (written by user, reviewed): Axios installed, `api/client.ts` (instance, baseURL `/api/v1`), `api/health.ts`, `pages/HomePage.tsx` (loading / data / error), `HomePage.test.tsx` with mocked API, Vite demo + `App.test.tsx` removed. `npm run check` green (2 tests). Open: stray `”` in error text, unused `error` state value, manual browser check not yet confirmed. Note: user changed the error test from `/error/i` text to `findByRole('alert')` — accepted since it was the optional suggestion, but flagged.
 
 ## Known issues / blocked
 - None.
