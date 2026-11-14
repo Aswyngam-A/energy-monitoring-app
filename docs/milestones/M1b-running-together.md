@@ -41,3 +41,4 @@ Multi-stage Docker builds, compose services/networks/volumes/healthchecks, conta
 ## Status log
 - 2026-11-11 — Created.
 - 2026-11-14 — Ready to start (M1a done). Notes: Quarkus has the `compose` feature enabled, so check how it interacts with a `docker-compose.yml` in dev mode. Also fix `npm run typecheck` (root tsconfig has `files: []`, so it checks nothing) and consider starting Docker Desktop at login.
+- 2026-11-15 — Steps 1–4 done: backend/frontend Dockerfiles, nginx reverse proxy (decision: proxy, not CORS; web on :3000), docker-compose.yml, typecheck fixed, CI backend + frontend jobs green. Remaining: e2e folder + smoke test, e2e job in CI, data-reset decision.

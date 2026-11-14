@@ -30,7 +30,7 @@
 | ~~Run `*IT` tests in verify?~~ → **Yes**, `skipITs=false` in pom, decided 2026-11-12 | M1a ✓ |
 | ~~Frontend → API in dev~~ → **Vite proxy** `/api` → `localhost:8080` (already in `vite.config.ts`), Axios uses relative `/api/v1`, decided 2026-11-12 | M1a ✓ |
 | How the frontend container reaches the API (proxy vs CORS) | M1b |
-| CI triggers and jobs; does CI run e2e? | M1b |
+| ~~CI triggers and jobs~~ → push to `main` + PRs; backend and frontend jobs (2026-11-15). e2e job: step 5 | M1b (partly ✓) |
 | E2E data reset between tests | M1b |
 | Sensor auth (none assumed) | M3 |
 | Reading units; timestamp client- or server-set; UTC | M4 |
@@ -54,6 +54,7 @@
 - 2026-11-14 — **M1a done.** Docker back up: `./mvnw verify` green (ErrorMapper + HealthResource, Test + IT, 4 tests); `npm run check` green (5 tests). e2e starts in M1b.
 
 - 2026-11-15 — M1b steps 1–3 done (written by user, reviewed): multi-stage backend Dockerfile, frontend Dockerfile + `nginx.conf` (reverse proxy `/api/` → `api:8080`, SPA fallback), `docker-compose.yml` (db with healthcheck + volume, api, web on :3000). Stack verified: health through nginx returns UP, Flyway connects to Postgres. Decision: reverse proxy, not CORS. Fixed `npm run typecheck` (`tsc -b`; verified it fails on a deliberate error). Next: CI backend + frontend jobs, then e2e, then e2e job.
+- 2026-11-15 — M1b step 4 done (written by user, reviewed): `.github/workflows/ci.yml` with `backend` (`./mvnw verify -B`) and `frontend` (`npm ci`, `npm run check`) jobs; triggers: push to `main` + pull requests. Fix on review: `working-directory` is a key of `run` steps, not under `with:`. First run green on GitHub for both jobs. Next: e2e folder + smoke test, then add the e2e job.
 
 ## Known issues / blocked
 - None.
