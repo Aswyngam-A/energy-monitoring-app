@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M2 — Sites (in progress, step 3 of 6 done)
+**Current milestone:** M2 — Sites (in progress, step 4 of 6 done)
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -59,6 +59,7 @@
 - 2026-11-15 — M2 step 1 done (written by user, reviewed): `Site` Panache entity (`com.energy.site`), `V1__create_site.sql` (table + `site_seq` INCREMENT 50 to match Hibernate's id allocation; no column DEFAULT), `SiteTest` (persist + read back, `@AfterEach` cleanup, `compareTo` for BigDecimal). Decisions: threshold = `NUMERIC(12,2)`/`BigDecimal`, no unit yet; no delete. `./mvnw verify` BUILD SUCCESS (3 unit + 2 IT). Note: Docker Desktop must be running for tests.
 - 2026-11-15 — M2 step 2 done (written by user, reviewed): `SiteRequest`/`SiteResponse` records, `SiteResource` `POST /api/v1/sites` (201 + Location), Bean Validation (`@NotBlank` name, `@NotNull @Positive` threshold) with `quarkus-hibernate-validator`; `SiteResourceTest` (valid 201 + Location check, blank name, zero threshold, missing threshold, malformed JSON → 400). Lessons: constraints are type-bound (`@NotBlank` on BigDecimal → 500), `@Positive` allows null. `./mvnw verify` BUILD SUCCESS (7 unit + 2 IT).
 - 2026-11-15 — M2 step 3 done (shared mode): `GET /sites`, `GET /sites/{id}` (404 via `NotFoundException`), `PUT /sites/{id}` (200/400/404, dirty-checking, no `persist()`), tests written by user; plus a second `@ServerExceptionMapper` for `ConstraintViolationException` so validation 400s use `ErrorResponse` (`details` = "field: message", field name cleaned). The mapper body was written by Claude at the user's request (exception to the shared-mode split) and explained; the user wrote its test. Finding: declaring `ConstraintViolationException` is enough, Quarkus's built-in mapper does not override it. `./mvnw verify` BUILD SUCCESS (14 unit + 2 IT). Backend of M2 complete; next: frontend (steps 4-5), e2e (step 6).
+- 2026-11-15 — M2 step 4 done (shared mode): frontend `api/sites.ts` (`Site`/`SiteInput` types, `listSites`, `getSite`; `createSite`/`updateSite` still TODO stubs for step 5), `SitesListPage` (loading/error/empty/list, links to detail) and `SiteDetailPage` (`useParams`, `Number(id)`, loading/"Site not found"/back link), routes `/sites` and `/sites/:id`, "Sites" nav link, tests for both pages (`MemoryRouter`). List page + tests written by user (reviewed: fixed state/function name shadowing, `Site[]` return type, `${id}` template literal); detail page + its tests written by Claude at the user's request. `npm run check` green (5 suites, 11 tests). Next: step 5 create/edit form (learning mode), step 6 e2e.
 
 ## Known issues / blocked
 - None.
