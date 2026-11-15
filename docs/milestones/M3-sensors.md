@@ -37,3 +37,4 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 - 2026-11-15 — Step 2 done: POST /sites/{siteId}/sensors (201 / 400 / 404) + 5 tests; verify green. Location points at /sensors/{id}, which step 3 implements.
 - 2026-11-15 — Step 3 done: GET list (per site) and GET /sensors/{id}; 10 resource tests; verify green. Backend complete.
 - 2026-11-15 — Step 4 done: api/sensors (list, get, create) + 4 tests; npm run check green (33 tests).
+- 2026-11-15 — Step 5 done: SensorForm + SensorsSection on the site detail page, 10 new tests; npm run check green (43 tests). Remaining: step 6 e2e.

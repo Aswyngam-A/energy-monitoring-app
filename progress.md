@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M3 — Sensors, in progress (step 4 of 6 done)
+**Current milestone:** M3 — Sensors, in progress (step 5 of 6 done)
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -66,6 +66,7 @@
 - 2026-11-15 — **M3 step 2 done.** `POST /api/v1/sites/{siteId}/sensors`: `SensorRequest` (`@NotBlank name`, optional `type`), `SensorResponse` (includes `siteId`), `SensorResource` (404 unknown site, 400 invalid body in the shared ErrorResponse shape, 201 + `Location` = `/api/v1/sensors/{id}`). 5 `SensorResourceTest` tests, red first (404s), then green. `./mvnw verify` green (21 unit + 2 IT). Step 1 pushed as e57dfe8, CI green. Next: step 3 GET list + GET by id.
 - 2026-11-15 — **M3 step 3 done (backend complete).** `GET /sites/{siteId}/sensors` (200, `[]` when empty, 404 unknown site; filtered in the DB with `site.id`) in `SensorResource`, and `GET /sensors/{id}` (200 / 404) in the new `SensorLookupResource` (a JAX-RS class has one root path, and the nested one differs). 5 new tests (10 in `SensorResourceTest`), the 3 happy-path ones red first. Step 2 pushed as 0135a6e, CI green. `./mvnw verify` green (26 unit + 2 IT). Next: step 4 frontend `api/sensors.ts`.
 - 2026-11-15 — **M3 step 4 done.** `frontend/src/api/sensors.ts` (`Sensor` with `type: string | null`, `SensorInput` with optional `type`, `listSensors(siteId)`, `getSensor(id)`, `createSensor(siteId, input)`) + `sensors.test.ts` (4 tests, red first: module missing). `npm run check` green (10 suites, 33 tests). Step 3 pushed as 569cea8, CI green. Next: step 5 sensors section + add-sensor form on the site detail page.
+- 2026-11-15 — **M3 step 5 done.** Site detail page now shows a sensors section: `SensorForm` (name required, optional type, blank type left out of the body, clears after success, alert on failure), `SensorsSection` (loads `listSensors(siteId)`, loading / empty / error states, appends the created sensor to the list), rendered by `SiteDetailPage`. `SiteDetailPage.test` stubs `SensorsSection` (its own tests cover it) and gains one test that it is rendered for the site. 10 new tests, red first (modules missing). `npm run check` green (12 suites, 43 tests). Step 4 pushed as fd17027, CI green. Next: step 6 e2e + M3 close-out (docs, learning-notes section).
 
 ## Known issues / blocked
 - None.
