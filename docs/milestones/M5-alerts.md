@@ -1,6 +1,6 @@
 # M5 — Alerts
 
-**Status:** Not started
+**Status:** In progress
 
 ## Goal
 A reading above its site's threshold raises an alert; alerts are visible on an alerts page and as a badge.
@@ -33,3 +33,5 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 
 ## Status log
 - 2026-11-11 — Created.
+- 2026-11-16 — Decided: strictly `>`; threshold per site only; one alert per breaching reading; alert snapshots value + threshold; status enum with only OPEN (text column); reading + alert in one transaction.
+- 2026-11-16 — Step 1 done: `ThresholdRule` + 8 plain-JUnit tests; verify green.
