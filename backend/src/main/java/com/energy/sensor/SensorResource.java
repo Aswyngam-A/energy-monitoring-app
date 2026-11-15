@@ -4,6 +4,7 @@ import com.energy.site.Site;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -15,6 +16,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 
 import java.net.URI;
+import java.util.List;
 
 /**
  * Nested endpoints: sensors live under their site, /api/v1/sites/{siteId}/sensors.
@@ -24,6 +26,23 @@ import java.net.URI;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class SensorResource {
+
+    /**
+     * GET /sites/{siteId}/sensors: the sensors of one site (empty array if none), 404 if the site is unknown.
+     * The existence check matters: without it, "no such site" and "site without sensors" would both look like [].
+     */
+    @GET
+    public List<SensorResponse> list(@PathParam("siteId") Long siteId) {
+        if (Site.findById(siteId) == null) {
+            throw new NotFoundException("Site " + siteId + " not found");
+        }
+        // "site.id" navigates the relationship in the query, so the filter happens in the database.
+        // Mapping to SensorResponse only reads ids and plain columns, so no lazy loading happens.
+        return Sensor.<Sensor>list("site.id", siteId)
+            .stream()
+            .map(SensorResponse::from)
+            .toList();
+    }
 
     /**
      * POST /sites/{siteId}/sensors: 404 if the site does not exist, 400 if the body is invalid,

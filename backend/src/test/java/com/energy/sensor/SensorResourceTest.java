@@ -117,6 +117,76 @@ class SensorResourceTest {
                 .statusCode(400);
     }
 
+    /** Saves a sensor on the given site and returns its id. */
+    @Transactional
+    Long insertSensor(Long siteId, String name, String type) {
+        Sensor sensor = new Sensor();
+        sensor.name = name;
+        sensor.type = type;
+        sensor.site = Site.findById(siteId);
+        sensor.persist();
+        return sensor.id;
+    }
+
+    @Test
+    void listReturnsOnlyTheSensorsOfThatSite() {
+        Long siteA = insertSite();
+        Long siteB = insertSite();
+        insertSensor(siteA, "A1", "power");
+        insertSensor(siteA, "A2", null);
+        insertSensor(siteB, "B1", "temperature");
+
+        given()
+            .when().get(SENSORS_PATH, siteA)
+            .then()
+                .statusCode(200)
+                .body("size()", is(2))
+                .body("name", hasItems("A1", "A2"))
+                .body("siteId", hasItems(siteA.intValue()));
+    }
+
+    @Test
+    void listForSiteWithoutSensorsReturnsEmptyArray() {
+        Long siteId = insertSite();
+
+        given()
+            .when().get(SENSORS_PATH, siteId)
+            .then()
+                .statusCode(200)
+                .body("size()", is(0));
+    }
+
+    @Test
+    void listForUnknownSiteReturns404() {
+        given()
+            .when().get(SENSORS_PATH, 999999L)
+            .then()
+                .statusCode(404);
+    }
+
+    @Test
+    void getExistingSensorReturns200() {
+        Long siteId = insertSite();
+        Long sensorId = insertSensor(siteId, "Main meter", "power");
+
+        given()
+            .when().get("/api/v1/sensors/{id}", sensorId)
+            .then()
+                .statusCode(200)
+                .body("id", is(sensorId.intValue()))
+                .body("name", is("Main meter"))
+                .body("type", is("power"))
+                .body("siteId", is(siteId.intValue()));
+    }
+
+    @Test
+    void getUnknownSensorReturns404() {
+        given()
+            .when().get("/api/v1/sensors/{id}", 999999L)
+            .then()
+                .statusCode(404);
+    }
+
     @Test
     void createSensorForUnknownSiteReturns404() {
         given()

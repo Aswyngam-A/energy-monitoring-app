@@ -35,3 +35,4 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 - 2026-11-15 — Decided: no sensor auth; fields `name` (required) + `type` (optional); unit in M4.
 - 2026-11-15 — Step 1 done: `Sensor` entity (`@ManyToOne` LAZY to `Site`) + `V2` migration + `SensorTest`; verify green.
 - 2026-11-15 — Step 2 done: POST /sites/{siteId}/sensors (201 / 400 / 404) + 5 tests; verify green. Location points at /sensors/{id}, which step 3 implements.
+- 2026-11-15 — Step 3 done: GET list (per site) and GET /sensors/{id}; 10 resource tests; verify green. Backend complete.

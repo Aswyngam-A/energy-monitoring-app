@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M3 — Sensors, in progress (step 2 of 6 done)
+**Current milestone:** M3 — Sensors, in progress (step 3 of 6 done (backend complete))
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -64,6 +64,7 @@
 - 2026-11-15 — **M2 done.** Step 6 (feedback-loop mode): `e2e/tests/sites.spec.ts` (create a site and see it in the list, invalid form shows errors, edit renames a site). **e2e data-reset decision:** tests use unique site names and never assume an empty DB or clean up (no delete endpoint; CI starts fresh). Verified by running Playwright twice against the same database. All checks green: `./mvnw verify` (14 unit + 2 IT), `npm run check` (29 tests), `playwright test` (4 passed). Environment note: one `docker compose up --build` failed because Docker Desktop could not reach Docker Hub (network unreachable); a retry worked.
 - 2026-11-15 — **M3 step 1 done.** Decided: no sensor auth; sensor fields = `name` (required) + `type` (optional text); unit left for M4. Added `SensorTest` (persist with site, optional type), `Sensor` entity (`@ManyToOne(fetch=LAZY)` to `Site`) and migration `V2__create_sensor.sql` (`sensor_seq` step 50, FK `site_id`, index). `./mvnw verify` green (16 unit + 2 IT). Next: step 2 POST /sites/{siteId}/sensors.
 - 2026-11-15 — **M3 step 2 done.** `POST /api/v1/sites/{siteId}/sensors`: `SensorRequest` (`@NotBlank name`, optional `type`), `SensorResponse` (includes `siteId`), `SensorResource` (404 unknown site, 400 invalid body in the shared ErrorResponse shape, 201 + `Location` = `/api/v1/sensors/{id}`). 5 `SensorResourceTest` tests, red first (404s), then green. `./mvnw verify` green (21 unit + 2 IT). Step 1 pushed as e57dfe8, CI green. Next: step 3 GET list + GET by id.
+- 2026-11-15 — **M3 step 3 done (backend complete).** `GET /sites/{siteId}/sensors` (200, `[]` when empty, 404 unknown site; filtered in the DB with `site.id`) in `SensorResource`, and `GET /sensors/{id}` (200 / 404) in the new `SensorLookupResource` (a JAX-RS class has one root path, and the nested one differs). 5 new tests (10 in `SensorResourceTest`), the 3 happy-path ones red first. Step 2 pushed as 0135a6e, CI green. `./mvnw verify` green (26 unit + 2 IT). Next: step 4 frontend `api/sensors.ts`.
 
 ## Known issues / blocked
 - None.
