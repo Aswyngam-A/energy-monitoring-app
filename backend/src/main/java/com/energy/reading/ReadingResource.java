@@ -1,6 +1,7 @@
 package com.energy.reading;
 
 import com.energy.sensor.Sensor;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BadRequestException;
@@ -25,6 +26,10 @@ import java.time.Instant;
 @Consumes(MediaType.APPLICATION_JSON)
 public class ReadingResource {
 
+    /** Does the actual work of storing a reading and raising an alert; this class only handles HTTP. */
+    @Inject
+    ReadingService readingService;
+
     /**
      * How far ahead of the server clock a client timestamp may be. Sensor clocks are never exact,
      * so a small tolerance avoids rejecting honest readings; an hour ahead is a client bug.
@@ -33,7 +38,8 @@ public class ReadingResource {
 
     /**
      * POST /sensors/{sensorId}/readings: 404 if the sensor does not exist, 400 if the body is invalid
-     * or the timestamp is too far in the future, otherwise save and answer 201 with the reading.
+     * or the timestamp is too far in the future, otherwise save (via ReadingService, which also
+     * raises an alert when the value is above the site's threshold) and answer 201 with the reading.
      * There is no Location header: single readings have no URL of their own in this API.
      */
     @POST
@@ -54,11 +60,7 @@ public class ReadingResource {
                 + MAX_FUTURE.toMinutes() + " minutes in the future");
         }
 
-        Reading reading = new Reading();
-        reading.value = request.value();
-        reading.timestamp = timestamp;
-        reading.sensor = sensor;
-        reading.persist();
+        Reading reading = readingService.ingest(sensor, request.value(), timestamp);
 
         return Response.status(Response.Status.CREATED)
             .entity(ReadingResponse.from(reading))
