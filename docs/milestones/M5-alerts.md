@@ -35,3 +35,4 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 - 2026-11-11 — Created.
 - 2026-11-16 — Decided: strictly `>`; threshold per site only; one alert per breaching reading; alert snapshots value + threshold; status enum with only OPEN (text column); reading + alert in one transaction.
 - 2026-11-16 — Step 1 done: `ThresholdRule` + 8 plain-JUnit tests; verify green.
+- 2026-11-16 — Step 2 done: `Alert` entity, `AlertStatus` (OPEN), `V4` migration, `AlertTest`; verify green.
