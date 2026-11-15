@@ -1,6 +1,6 @@
 # M2 — Sites
 
-**Status:** In progress (step 2 of 6 done)
+**Status:** In progress (step 3 of 6 done)
 
 ## Goal
 A user can create, list, view and edit sites (name + alert threshold) from the dashboard.
@@ -44,4 +44,5 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 ## Status log
 - 2026-11-11 — Created.
 - 2026-11-15 — Step 1 done: `Site` entity + `V1` migration + `SiteTest`; verify green. Decided: threshold `NUMERIC(12,2)`, no unit yet, no delete.
-- 2026-11-15 — Step 2 done: POST /sites with validation + 4 tests (+ malformed JSON); verify green. Open: shape of validation 400 body vs `ErrorResponse`.
+- 2026-11-15 — Step 2 done: POST /sites with validation + 4 tests (+ malformed JSON); verify green.
+- 2026-11-15 — Step 3 done: GET list/get/PUT + validation exception mapper (ErrorResponse shape for 400); 11 resource tests; verify green. Backend complete.

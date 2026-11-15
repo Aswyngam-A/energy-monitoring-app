@@ -12,6 +12,7 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.hasItems;
 
 import org.junit.jupiter.api.AfterEach;
 
@@ -84,5 +85,105 @@ class SiteResourceTest {
             .when().post()
             .then()
                 .statusCode(400);
+    }
+
+    @Transactional
+    Long insertSite(String name, String threshold) {
+        Site site = new Site();
+        site.name = name;
+        site.threshold = new java.math.BigDecimal(threshold);
+        site.persist();
+        return site.id;
+    }
+
+    @Test
+    void listReturnsAllSites() {
+        insertSite("A", "10.00");
+        insertSite("B", "20.00");
+
+        given()
+            .when().get()
+            .then()
+                .statusCode(200)
+                .body("size()", is(2));
+    }
+
+    @Test
+    void getExistingSiteReturns200() {
+        Long id = insertSite("A", "10.00");
+
+        given()
+            .when().get("/{id}", id)
+            .then()
+                .statusCode(200)
+                .body("name", is("A"));
+    }
+
+    @Test
+    void getUnknownSiteReturns404() {
+        given()
+            .when().get("/{id}", 999999L)
+            .then()
+                .statusCode(404);
+    }
+
+    @Test
+    void updateExistingSiteReturns200() {
+        Long id = insertSite("Old", "10.00");
+
+        given()
+            .contentType("application/json")
+            .body("""
+                { "name": "New", "threshold": 20.00 }
+                """)
+            .when().put("/{id}", id)
+            .then()
+                .statusCode(200)
+                .body("name", is("New"))
+                .body("threshold", is(20.00f));
+    }
+
+    @Test
+    void updateUnknownSiteReturns404() {
+        given()
+            .contentType("application/json")
+            .body("""
+                { "name": "New", "threshold": 20.00 }
+                """)
+            .when().put("/{id}", 999999L)
+            .then()
+                .statusCode(404);
+    }
+
+    @Test
+    void updateWithInvalidBodyReturns400() {
+        Long id = insertSite("A", "10.00");
+
+        given()
+            .contentType("application/json")
+            .body("""
+                { "name": "", "threshold": -5 }
+                """)
+            .when().put("/{id}", id)
+            .then()
+                .statusCode(400);
+    }
+
+    @Test
+    void validationErrorUsesErrorResponseShape() {
+        given()
+            .contentType("application/json")
+            .body("""
+                { "name": "", "threshold": -1 }
+                """)
+            .when().post()
+            .then()
+                .statusCode(400)
+                .body("status", is(400))
+                .body("error", is("Bad Request"))
+                .body("details", hasItems(
+                    "name: must not be blank",
+                    "threshold: must be greater than 0"
+                ));
     }
 }
