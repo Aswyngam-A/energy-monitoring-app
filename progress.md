@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M4 — Readings ingestion, in progress (step 5 of 7 done)
+**Current milestone:** M5 — not started (M4 Readings done)
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -17,7 +17,7 @@
 | M1b | Running it together | Done | [docs/milestones/M1b-running-together.md](docs/milestones/M1b-running-together.md) |
 | M2 | Sites | Done | [docs/milestones/M2-sites.md](docs/milestones/M2-sites.md) |
 | M3 | Sensors | Done | [docs/milestones/M3-sensors.md](docs/milestones/M3-sensors.md) |
-| M4 | Readings ingestion | In progress | [docs/milestones/M4-readings.md](docs/milestones/M4-readings.md) |
+| M4 | Readings ingestion | Done | [docs/milestones/M4-readings.md](docs/milestones/M4-readings.md) |
 | M5 | Alerts | Not started | [docs/milestones/M5-alerts.md](docs/milestones/M5-alerts.md) |
 | M6 | Alert lifecycle | Not started | [docs/milestones/M6-alert-lifecycle.md](docs/milestones/M6-alert-lifecycle.md) |
 | M7 | Dashboard + hardening | Not started | [docs/milestones/M7-dashboard-hardening.md](docs/milestones/M7-dashboard-hardening.md) |
@@ -73,6 +73,7 @@
 - 2026-11-15 — **M4 step 3 done (backend complete).** `GET /api/v1/sites/{siteId}/readings?from=&to=` in the new `SiteReadingsResource`: all readings of the site's sensors, newest first; `from`/`to` optional ISO-8601 instants, both inclusive; 404 unknown site; 400 for a malformed date or `from` after `to` (query params read as strings and parsed by hand for a clear 400). One query with `join fetch` (no per-row lazy loads); optional filters appended to the HQL only when given (PostgreSQL cannot infer the type of a null parameter). `ReadingResponse` gained `sensorName` (additive; POST responses now include it). 12 new tests (`SiteReadingsResourceTest`), 11 red first. `./mvnw verify` green (51 unit + 2 IT). Step 2 pushed as 03d0a29, CI green. Next: step 4 frontend `api/readings.ts`.
 - 2026-11-16 — **M4 step 4 done.** `frontend/src/api/readings.ts` (`Reading` with ISO-string `timestamp` and `sensorName`, `ReadingInput` with optional `timestamp`, `ReadingRange`, `listSiteReadings(siteId, range?)` sending only the bounds that have a value, `createReading(sensorId, input)`) + `readings.test.ts` (5 tests, red first: module missing). `npm run check` green (13 suites, 48 tests). Step 3 pushed as 182dca0, CI green (two GitHub API timeouts while checking; retry by run id worked). Next: step 5 readings table + from/to filter on the site page.
 - 2026-11-16 — **M4 step 5 done.** Site detail page now shows a readings table. **Date decision:** everything shown and typed in the UI is UTC, labelled "(UTC)" (no hidden timezone shifts; tests are timezone-independent); local-time display is a possible later improvement. Added `utils/dates.ts` (`formatTimestamp` -> `YYYY-MM-DD HH:mm:ss` UTC; `utcInputToIso` reads a `datetime-local` value as UTC, `''` = no bound, `null` = invalid) + tests, `ReadingsSection` (table of time / sensor / value (kW), loading / empty / error states, From/To filter with Apply and Clear, client check "From must not be after To", stale-response guard in the load effect) + tests, rendered by `SiteDetailPage` (its test stubs the section and gains one test). 15 new tests, red first (modules missing). `npm run check` green (15 suites, 63 tests, no act warnings). Step 4 pushed as c7e9346, CI green. Next: step 6 e2e (first Playwright `request` call) + M4 close-out.
+- 2026-11-16 — **M4 done.** Step 6: `e2e/tests/readings.spec.ts` (5 tests; the first to use Playwright's `request` fixture: data is set up through the API, assertions are made in the UI): a posted reading shows in the table with UTC time, sensor and value; a reading without timestamp gets server time; empty site message; from/to filter narrows and Clear restores; From after To refused. Red first against the old images (404 on the readings endpoint), green after `docker compose up -d --build`; second run on the same DB also passed. All checks green: `./mvnw verify` (51 unit + 2 IT), `npm run check` (63 tests), `playwright test` (12 passed). Step 5 pushed as 895ac66, CI green. M4 section added to `docs/learning-notes.md`.
 
 ## Known issues / blocked
 - Site readings list is unbounded (no limit/paging): fine for practice data, revisit in M7.

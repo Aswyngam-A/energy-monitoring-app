@@ -1,6 +1,6 @@
 # M4 — Readings ingestion
 
-**Status:** In progress
+**Status:** Done (2026-11-16)
 
 ## Goal
 Sensors post readings; the site page shows recent readings, filterable by time range.
@@ -40,3 +40,4 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 - 2026-11-15 — Step 3 done: GET /sites/{siteId}/readings?from=&to= (inclusive range, newest first, 400 / 404), `sensorName` added to the response; 12 tests; verify green. Backend complete. Known gap: no result limit yet.
 - 2026-11-16 — Step 4 done: api/readings (listSiteReadings with optional range, createReading) + 5 tests; npm run check green (48 tests).
 - 2026-11-16 — Step 5 done: readings table + UTC from/to filter on the site page, date helpers; 15 new tests; npm run check green (63 tests). Decided: UI times are UTC. Remaining: step 6 e2e.
+- 2026-11-16 — Step 6 done: e2e tests with the Playwright `request` fixture (post readings via API, check the table and filter in the UI). M4 complete, all three checks green.
