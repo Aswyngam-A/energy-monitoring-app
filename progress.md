@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M1b — Running it together (not started)
+**Current milestone:** M2 — Sites (not started)
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -14,7 +14,7 @@
 | # | Milestone | Status | File |
 |---|---|---|---|
 | M1a | Local foundations | Done | [docs/milestones/M1a-local-foundations.md](docs/milestones/M1a-local-foundations.md) |
-| M1b | Running it together | Not started | [docs/milestones/M1b-running-together.md](docs/milestones/M1b-running-together.md) |
+| M1b | Running it together | Done | [docs/milestones/M1b-running-together.md](docs/milestones/M1b-running-together.md) |
 | M2 | Sites | Not started | [docs/milestones/M2-sites.md](docs/milestones/M2-sites.md) |
 | M3 | Sensors | Not started | [docs/milestones/M3-sensors.md](docs/milestones/M3-sensors.md) |
 | M4 | Readings ingestion | Not started | [docs/milestones/M4-readings.md](docs/milestones/M4-readings.md) |
@@ -55,6 +55,7 @@
 
 - 2026-11-15 — M1b steps 1–3 done (written by user, reviewed): multi-stage backend Dockerfile, frontend Dockerfile + `nginx.conf` (reverse proxy `/api/` → `api:8080`, SPA fallback), `docker-compose.yml` (db with healthcheck + volume, api, web on :3000). Stack verified: health through nginx returns UP, Flyway connects to Postgres. Decision: reverse proxy, not CORS. Fixed `npm run typecheck` (`tsc -b`; verified it fails on a deliberate error). Next: CI backend + frontend jobs, then e2e, then e2e job.
 - 2026-11-15 — M1b step 4 done (written by user, reviewed): `.github/workflows/ci.yml` with `backend` (`./mvnw verify -B`) and `frontend` (`npm ci`, `npm run check`) jobs; triggers: push to `main` + pull requests. Fix on review: `working-directory` is a key of `run` steps, not under `with:`. First run green on GitHub for both jobs. Next: e2e folder + smoke test, then add the e2e job.
+- 2026-11-15 — **M1b done.** Steps 5–6 (written by user, reviewed): `e2e/` Playwright project (chromium, baseURL :3000), smoke test (home shows UP; verified failing with stack down, passing with it up), `e2e` CI job. Stray root-level npm files from running `npm init` in the wrong folder were removed. All three CI jobs green on GitHub. Local: `./mvnw verify` exit 0, `npm run check` green (5 tests), `playwright test` 1 passed. Open: e2e data reset (decide in M2 when data exists); optional api healthcheck + `compose up --wait` if CI timing ever flakes.
 
 ## Known issues / blocked
 - None.

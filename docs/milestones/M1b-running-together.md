@@ -1,6 +1,6 @@
 # M1b — Running it together
 
-**Status:** Not started
+**Status:** Done (2026-11-15)
 
 ## Goal
 The whole stack runs with `docker compose up -d`, a Playwright smoke test passes against it, and CI runs all checks on every push.
@@ -42,3 +42,4 @@ Multi-stage Docker builds, compose services/networks/volumes/healthchecks, conta
 - 2026-11-11 — Created.
 - 2026-11-14 — Ready to start (M1a done). Notes: Quarkus has the `compose` feature enabled, so check how it interacts with a `docker-compose.yml` in dev mode. Also fix `npm run typecheck` (root tsconfig has `files: []`, so it checks nothing) and consider starting Docker Desktop at login.
 - 2026-11-15 — Steps 1–4 done: backend/frontend Dockerfiles, nginx reverse proxy (decision: proxy, not CORS; web on :3000), docker-compose.yml, typecheck fixed, CI backend + frontend jobs green. Remaining: e2e folder + smoke test, e2e job in CI, data-reset decision.
+- 2026-11-15 — **Done.** e2e folder + smoke test, e2e CI job green. All three checks green locally and in CI.
