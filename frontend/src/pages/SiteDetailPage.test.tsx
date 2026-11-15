@@ -6,11 +6,15 @@ import SiteDetailPage from './SiteDetailPage';
 import * as sitesApi from '../api/sites';
 
 jest.mock('../api/sites');
-// The sensors section has its own tests and its own API calls; replace it with a stub here
-// so these tests stay about the site itself.
+// The sensors and readings sections have their own tests and their own API calls; replace
+// them with stubs here so these tests stay about the site itself.
 jest.mock('../components/SensorsSection', () => ({
   __esModule: true,
   default: ({ siteId }: { siteId: number }) => <div>sensors for site {siteId}</div>,
+}));
+jest.mock('../components/ReadingsSection', () => ({
+  __esModule: true,
+  default: ({ siteId }: { siteId: number }) => <div>readings for site {siteId}</div>,
 }));
 
 function renderAt(path: string) {
@@ -53,4 +57,10 @@ test('shows the sensors section for this site', async () => {
   jest.mocked(sitesApi.getSite).mockResolvedValue({ id: 7, name: 'Site A', threshold: 10 });
   renderAt('/sites/7');
   expect(await screen.findByText('sensors for site 7')).toBeInTheDocument();
+});
+
+test('shows the readings section for this site', async () => {
+  jest.mocked(sitesApi.getSite).mockResolvedValue({ id: 7, name: 'Site A', threshold: 10 });
+  renderAt('/sites/7');
+  expect(await screen.findByText('readings for site 7')).toBeInTheDocument();
 });

@@ -39,3 +39,4 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 - 2026-11-15 — Step 2 done: POST /sensors/{sensorId}/readings (201 / 400 / 404), timestamp rules, 11 tests; verify green.
 - 2026-11-15 — Step 3 done: GET /sites/{siteId}/readings?from=&to= (inclusive range, newest first, 400 / 404), `sensorName` added to the response; 12 tests; verify green. Backend complete. Known gap: no result limit yet.
 - 2026-11-16 — Step 4 done: api/readings (listSiteReadings with optional range, createReading) + 5 tests; npm run check green (48 tests).
+- 2026-11-16 — Step 5 done: readings table + UTC from/to filter on the site page, date helpers; 15 new tests; npm run check green (63 tests). Decided: UI times are UTC. Remaining: step 6 e2e.

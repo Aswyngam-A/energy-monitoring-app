@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { getSite, type Site } from '../api/sites';
+import ReadingsSection from '../components/ReadingsSection';
 import SensorsSection from '../components/SensorsSection';
 
 /**
  * Page at /sites/:id: shows one site's name and threshold, with links to edit it or go back,
- * and the site's sensors (listed and added by SensorsSection).
+ * the site's sensors (listed and added by SensorsSection) and its readings (ReadingsSection).
  */
 export default function SiteDetailPage() {
   const { id } = useParams(); // route parameters are always strings
@@ -34,6 +35,7 @@ export default function SiteDetailPage() {
       <Link to="/sites">Back to sites</Link>
       {/* The site loaded successfully here, so its id is safe to use for the sensors. */}
       {site && <SensorsSection siteId={site.id} />}
+      {site && <ReadingsSection siteId={site.id} />}
     </section>
   );
 }
