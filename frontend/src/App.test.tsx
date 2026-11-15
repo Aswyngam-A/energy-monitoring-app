@@ -1,3 +1,4 @@
+// Tests for the route table: the home route and the not-found fallback.
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import * as healthApi from './api/health';

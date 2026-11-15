@@ -5,6 +5,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
+/** GET /api/v1/health: liveness check. Does not touch the database, so it answers even when the DB is down. */
 @Path("/health")
 public class HealthResource {
 

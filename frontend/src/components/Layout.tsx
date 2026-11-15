@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router';
 
+/** Page frame shared by every route: title, navigation, and the current page in <Outlet />. */
 export default function Layout() {
   return (
     <div>
@@ -11,6 +12,7 @@ export default function Layout() {
         </nav>
       </header>
       <main>
+        {/* The matching child route (HomePage, SitesListPage...) renders here. */}
         <Outlet />
       </main>
     </div>

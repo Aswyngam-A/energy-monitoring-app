@@ -1,3 +1,4 @@
+// Tests for the home page: the API is mocked, so we check how the page reacts to a success and to a failure.
 import { render, screen } from '@testing-library/react';
 import HomePage from './HomePage';
 import * as healthApi from '../api/health';

@@ -1,3 +1,5 @@
+// Tests for /sites/:id: success, not-found alert, and the navigation links.
+// renderAt() mounts the page inside a route with :id so useParams() works.
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import SiteDetailPage from './SiteDetailPage';

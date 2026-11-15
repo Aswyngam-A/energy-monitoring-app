@@ -1,3 +1,4 @@
+// Tests for the shared page frame.
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import Layout from './Layout';

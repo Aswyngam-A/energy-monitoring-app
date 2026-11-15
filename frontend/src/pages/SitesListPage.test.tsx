@@ -1,3 +1,5 @@
+// Tests for the sites list: success, error, empty list, and the "New site" link.
+// The API is mocked; MemoryRouter is needed because the page renders <Link>s.
 import { render, screen } from '@testing-library/react';
 import SitesListPage from './SitesListPage';
 import { MemoryRouter } from 'react-router';

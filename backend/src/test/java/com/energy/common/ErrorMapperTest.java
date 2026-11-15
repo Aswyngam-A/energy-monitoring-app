@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.equalTo;
 
+/** An unknown URL must answer 404 in our JSON error format, not an HTML page. */
 @QuarkusTest
 class ErrorMapperTest {
 

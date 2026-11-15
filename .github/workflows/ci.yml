@@ -1,3 +1,4 @@
+# Runs on every push to main and on every pull request; the three jobs run in parallel.
 name: CI
 
 on:
@@ -6,6 +7,8 @@ on:
   pull_request:
 
 jobs:
+  # Backend: compile, unit tests and integration tests. Docker is preinstalled on ubuntu-latest,
+  # which Quarkus Dev Services needs to start PostgreSQL.
   backend:
     runs-on: ubuntu-latest
     steps:
@@ -18,6 +21,7 @@ jobs:
       - run: ./mvnw verify -B
         working-directory: backend
 
+  # Frontend: lint + typecheck + Jest (npm run check). `npm ci` installs exactly what the lockfile says.
   frontend:
     runs-on: ubuntu-latest
     steps:
@@ -32,6 +36,7 @@ jobs:
       - run: npm run check
         working-directory: frontend
 
+  # End-to-end: start the whole stack with docker compose, then drive it with Playwright in a real browser.
   e2e:
     runs-on: ubuntu-latest
     steps:

@@ -1,3 +1,4 @@
+// Runs before each test file: adds matchers like toBeInTheDocument().
 import '@testing-library/jest-dom'
 import { TextDecoder, TextEncoder } from 'util'
 

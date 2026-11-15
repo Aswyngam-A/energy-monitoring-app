@@ -16,10 +16,15 @@ import static org.hamcrest.Matchers.hasItems;
 
 import org.junit.jupiter.api.AfterEach;
 
+/**
+ * HTTP-level tests for /api/v1/sites: every status code of the contract (201, 200, 400, 404).
+ * @TestHTTPEndpoint makes .post()/.get() target the resource's base path, so no URL is repeated.
+ */
 @TestHTTPEndpoint(SiteResource.class)
 @QuarkusTest
 class SiteResourceTest {
 
+    /** Empties the table after each test so counts and ids do not leak between tests. */
     @AfterEach
     @Transactional
     void cleanUp() {
@@ -45,6 +50,8 @@ class SiteResourceTest {
                 .body("threshold", is(100.00f))
                 .extract();
 
+        // Location must point at the new resource: .../sites/{id}. Only the end is compared
+        // because the host and port depend on the test environment.
         String location = response.header("Location");
         String id = String.valueOf((Object) response.path("id"));
         assertTrue(location.endsWith("/sites/" + id),
