@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M3 — Sensors, in progress (step 1 of 6 done)
+**Current milestone:** M3 — Sensors, in progress (step 2 of 6 done)
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -63,6 +63,7 @@
 - 2026-11-15 — **Working mode changed** (user decision): from M2 step 5 on, feedback loop (Claude writes tests first, then code until green; user studies the listed concepts outside the project). M2 step 5 done: `createSite`/`updateSite` (+ `api/sites.test.ts`), `SiteForm` component (controlled inputs, client-side validation: name required/trimmed, threshold > 0, submit error alert, disabled while submitting), `SiteNewPage` (`/sites/new`, navigates to the new site), `SiteEditPage` (`/sites/:id/edit`, prefilled, navigates back to detail), "New site" link on the list (also when empty), "Edit" link on the detail page. `npm run check` green (9 suites, 29 tests). Next: step 6 e2e (create a site, see it in the list) + e2e data-reset decision.
 - 2026-11-15 — **M2 done.** Step 6 (feedback-loop mode): `e2e/tests/sites.spec.ts` (create a site and see it in the list, invalid form shows errors, edit renames a site). **e2e data-reset decision:** tests use unique site names and never assume an empty DB or clean up (no delete endpoint; CI starts fresh). Verified by running Playwright twice against the same database. All checks green: `./mvnw verify` (14 unit + 2 IT), `npm run check` (29 tests), `playwright test` (4 passed). Environment note: one `docker compose up --build` failed because Docker Desktop could not reach Docker Hub (network unreachable); a retry worked.
 - 2026-11-15 — **M3 step 1 done.** Decided: no sensor auth; sensor fields = `name` (required) + `type` (optional text); unit left for M4. Added `SensorTest` (persist with site, optional type), `Sensor` entity (`@ManyToOne(fetch=LAZY)` to `Site`) and migration `V2__create_sensor.sql` (`sensor_seq` step 50, FK `site_id`, index). `./mvnw verify` green (16 unit + 2 IT). Next: step 2 POST /sites/{siteId}/sensors.
+- 2026-11-15 — **M3 step 2 done.** `POST /api/v1/sites/{siteId}/sensors`: `SensorRequest` (`@NotBlank name`, optional `type`), `SensorResponse` (includes `siteId`), `SensorResource` (404 unknown site, 400 invalid body in the shared ErrorResponse shape, 201 + `Location` = `/api/v1/sensors/{id}`). 5 `SensorResourceTest` tests, red first (404s), then green. `./mvnw verify` green (21 unit + 2 IT). Step 1 pushed as e57dfe8, CI green. Next: step 3 GET list + GET by id.
 
 ## Known issues / blocked
 - None.
