@@ -1,6 +1,6 @@
 # M3 — Sensors
 
-**Status:** Not started
+**Status:** In progress
 
 ## Goal
 Sensors can be registered to a site and are listed on the site page.
@@ -32,3 +32,5 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 
 ## Status log
 - 2026-11-11 — Created.
+- 2026-11-15 — Decided: no sensor auth; fields `name` (required) + `type` (optional); unit in M4.
+- 2026-11-15 — Step 1 done: `Sensor` entity (`@ManyToOne` LAZY to `Site`) + `V2` migration + `SensorTest`; verify green.

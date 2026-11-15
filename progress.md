@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M3 — not started (M2 Sites done)
+**Current milestone:** M3 — Sensors, in progress (step 1 of 6 done)
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -16,7 +16,7 @@
 | M1a | Local foundations | Done | [docs/milestones/M1a-local-foundations.md](docs/milestones/M1a-local-foundations.md) |
 | M1b | Running it together | Done | [docs/milestones/M1b-running-together.md](docs/milestones/M1b-running-together.md) |
 | M2 | Sites | Done | [docs/milestones/M2-sites.md](docs/milestones/M2-sites.md) |
-| M3 | Sensors | Not started | [docs/milestones/M3-sensors.md](docs/milestones/M3-sensors.md) |
+| M3 | Sensors | In progress | [docs/milestones/M3-sensors.md](docs/milestones/M3-sensors.md) |
 | M4 | Readings ingestion | Not started | [docs/milestones/M4-readings.md](docs/milestones/M4-readings.md) |
 | M5 | Alerts | Not started | [docs/milestones/M5-alerts.md](docs/milestones/M5-alerts.md) |
 | M6 | Alert lifecycle | Not started | [docs/milestones/M6-alert-lifecycle.md](docs/milestones/M6-alert-lifecycle.md) |
@@ -32,7 +32,7 @@
 | How the frontend container reaches the API (proxy vs CORS) | M1b |
 | ~~CI triggers and jobs~~ → push to `main` + PRs; backend and frontend jobs (2026-11-15). e2e job: step 5 | M1b (partly ✓) |
 | E2E data reset between tests | M1b |
-| Sensor auth (none assumed) | M3 |
+| Sensor auth: none (decided 2026-11-15) | M3 |
 | Reading units; timestamp client- or server-set; UTC | M4 |
 | Threshold comparison `>` or `>=`; per-site only? | M5 |
 | Alert dedup: one per reading or one open per sensor | M6 |
@@ -62,6 +62,7 @@
 - 2026-11-15 — M2 step 4 done (shared mode): frontend `api/sites.ts` (`Site`/`SiteInput` types, `listSites`, `getSite`; `createSite`/`updateSite` still TODO stubs for step 5), `SitesListPage` (loading/error/empty/list, links to detail) and `SiteDetailPage` (`useParams`, `Number(id)`, loading/"Site not found"/back link), routes `/sites` and `/sites/:id`, "Sites" nav link, tests for both pages (`MemoryRouter`). List page + tests written by user (reviewed: fixed state/function name shadowing, `Site[]` return type, `${id}` template literal); detail page + its tests written by Claude at the user's request. `npm run check` green (5 suites, 11 tests). Next: step 5 create/edit form (learning mode), step 6 e2e.
 - 2026-11-15 — **Working mode changed** (user decision): from M2 step 5 on, feedback loop (Claude writes tests first, then code until green; user studies the listed concepts outside the project). M2 step 5 done: `createSite`/`updateSite` (+ `api/sites.test.ts`), `SiteForm` component (controlled inputs, client-side validation: name required/trimmed, threshold > 0, submit error alert, disabled while submitting), `SiteNewPage` (`/sites/new`, navigates to the new site), `SiteEditPage` (`/sites/:id/edit`, prefilled, navigates back to detail), "New site" link on the list (also when empty), "Edit" link on the detail page. `npm run check` green (9 suites, 29 tests). Next: step 6 e2e (create a site, see it in the list) + e2e data-reset decision.
 - 2026-11-15 — **M2 done.** Step 6 (feedback-loop mode): `e2e/tests/sites.spec.ts` (create a site and see it in the list, invalid form shows errors, edit renames a site). **e2e data-reset decision:** tests use unique site names and never assume an empty DB or clean up (no delete endpoint; CI starts fresh). Verified by running Playwright twice against the same database. All checks green: `./mvnw verify` (14 unit + 2 IT), `npm run check` (29 tests), `playwright test` (4 passed). Environment note: one `docker compose up --build` failed because Docker Desktop could not reach Docker Hub (network unreachable); a retry worked.
+- 2026-11-15 — **M3 step 1 done.** Decided: no sensor auth; sensor fields = `name` (required) + `type` (optional text); unit left for M4. Added `SensorTest` (persist with site, optional type), `Sensor` entity (`@ManyToOne(fetch=LAZY)` to `Site`) and migration `V2__create_sensor.sql` (`sensor_seq` step 50, FK `site_id`, index). `./mvnw verify` green (16 unit + 2 IT). Next: step 2 POST /sites/{siteId}/sensors.
 
 ## Known issues / blocked
 - None.

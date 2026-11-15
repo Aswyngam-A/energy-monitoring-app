@@ -13,3 +13,6 @@ e2e/playwright-report/
 .idea/
 .vscode/
 *.log
+
+# Personal study notes (not part of the project)
+docs/learning-notes.md
