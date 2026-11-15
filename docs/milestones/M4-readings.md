@@ -1,6 +1,6 @@
 # M4 — Readings ingestion
 
-**Status:** Not started
+**Status:** In progress
 
 ## Goal
 Sensors post readings; the site page shows recent readings, filterable by time range.
@@ -34,3 +34,5 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 
 ## Status log
 - 2026-11-11 — Created.
+- 2026-11-15 — Decided: unit = kW by convention (not stored); timestamp optional (default server time, UTC Instant); reject > 5 min in the future, accept old; value >= 0, NUMERIC(12,3).
+- 2026-11-15 — Step 1 done: `Reading` entity + `V3` migration (index on sensor_id, recorded_at) + `ReadingTest`; verify green.

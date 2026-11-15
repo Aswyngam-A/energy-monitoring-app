@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M4 — not started (M3 Sensors done)
+**Current milestone:** M4 — Readings ingestion, in progress (step 1 of 7 done)
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -17,7 +17,7 @@
 | M1b | Running it together | Done | [docs/milestones/M1b-running-together.md](docs/milestones/M1b-running-together.md) |
 | M2 | Sites | Done | [docs/milestones/M2-sites.md](docs/milestones/M2-sites.md) |
 | M3 | Sensors | Done | [docs/milestones/M3-sensors.md](docs/milestones/M3-sensors.md) |
-| M4 | Readings ingestion | Not started | [docs/milestones/M4-readings.md](docs/milestones/M4-readings.md) |
+| M4 | Readings ingestion | In progress | [docs/milestones/M4-readings.md](docs/milestones/M4-readings.md) |
 | M5 | Alerts | Not started | [docs/milestones/M5-alerts.md](docs/milestones/M5-alerts.md) |
 | M6 | Alert lifecycle | Not started | [docs/milestones/M6-alert-lifecycle.md](docs/milestones/M6-alert-lifecycle.md) |
 | M7 | Dashboard + hardening | Not started | [docs/milestones/M7-dashboard-hardening.md](docs/milestones/M7-dashboard-hardening.md) |
@@ -33,7 +33,7 @@
 | ~~CI triggers and jobs~~ → push to `main` + PRs; backend and frontend jobs (2026-11-15). e2e job: step 5 | M1b (partly ✓) |
 | E2E data reset between tests | M1b |
 | Sensor auth: none (decided 2026-11-15) | M3 |
-| Reading units; timestamp client- or server-set; UTC | M4 |
+| Reading units (kW by convention, not stored); timestamp optional from client, default server time, UTC `Instant`; reject > 5 min in the future, accept old (decided 2026-11-15) | M4 ✓ |
 | Threshold comparison `>` or `>=`; per-site only? | M5 |
 | Alert dedup: one per reading or one open per sensor | M6 |
 | Chart library | M7 |
@@ -68,6 +68,7 @@
 - 2026-11-15 — **M3 step 4 done.** `frontend/src/api/sensors.ts` (`Sensor` with `type: string | null`, `SensorInput` with optional `type`, `listSensors(siteId)`, `getSensor(id)`, `createSensor(siteId, input)`) + `sensors.test.ts` (4 tests, red first: module missing). `npm run check` green (10 suites, 33 tests). Step 3 pushed as 569cea8, CI green. Next: step 5 sensors section + add-sensor form on the site detail page.
 - 2026-11-15 — **M3 step 5 done.** Site detail page now shows a sensors section: `SensorForm` (name required, optional type, blank type left out of the body, clears after success, alert on failure), `SensorsSection` (loads `listSensors(siteId)`, loading / empty / error states, appends the created sensor to the list), rendered by `SiteDetailPage`. `SiteDetailPage.test` stubs `SensorsSection` (its own tests cover it) and gains one test that it is rendered for the site. 10 new tests, red first (modules missing). `npm run check` green (12 suites, 43 tests). Step 4 pushed as fd17027, CI green. Next: step 6 e2e + M3 close-out (docs, learning-notes section).
 - 2026-11-15 — **M3 done.** Step 6: `e2e/tests/sensors.spec.ts` (register a sensor and see it listed, survives a reload; empty name refused; a sensor only shows on its own site). Red first against the old images, then green after `docker compose up -d --build`. Data strategy as in M2 (unique names, no cleanup); second run on the same DB also passed. All checks green: `./mvnw verify` (26 unit + 2 IT), `npm run check` (43 tests), `playwright test` (7 passed). Step 5 pushed as ba0583c, CI green. M3 section added to `docs/learning-notes.md`.
+- 2026-11-15 — **M4 step 1 done.** Decisions: unit = kW by convention (no column); timestamp optional from the client, defaulting to server time, stored as UTC `Instant`; future timestamps (> 5 min) rejected with 400, old ones accepted; value `BigDecimal`, >= 0, `NUMERIC(12,3)`. Added `ReadingTest`, `Reading` entity (`@ManyToOne(LAZY)` to `Sensor`, field `timestamp` mapped to column `recorded_at`) and `V3__create_reading.sql` (`reading_seq` step 50, FK `sensor_id`, composite index `(sensor_id, recorded_at)`). Red first (class missing). `./mvnw verify` green (28 unit + 2 IT). M3 pushed as 35afb8d, CI green. Next: step 2 POST /sensors/{sensorId}/readings.
 
 ## Known issues / blocked
 - None.
