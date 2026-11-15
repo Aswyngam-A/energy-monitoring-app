@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M2 — Sites (in progress, step 4 of 6 done)
+**Current milestone:** M2 — Sites (in progress, step 5 of 6 done)
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -60,6 +60,7 @@
 - 2026-11-15 — M2 step 2 done (written by user, reviewed): `SiteRequest`/`SiteResponse` records, `SiteResource` `POST /api/v1/sites` (201 + Location), Bean Validation (`@NotBlank` name, `@NotNull @Positive` threshold) with `quarkus-hibernate-validator`; `SiteResourceTest` (valid 201 + Location check, blank name, zero threshold, missing threshold, malformed JSON → 400). Lessons: constraints are type-bound (`@NotBlank` on BigDecimal → 500), `@Positive` allows null. `./mvnw verify` BUILD SUCCESS (7 unit + 2 IT).
 - 2026-11-15 — M2 step 3 done (shared mode): `GET /sites`, `GET /sites/{id}` (404 via `NotFoundException`), `PUT /sites/{id}` (200/400/404, dirty-checking, no `persist()`), tests written by user; plus a second `@ServerExceptionMapper` for `ConstraintViolationException` so validation 400s use `ErrorResponse` (`details` = "field: message", field name cleaned). The mapper body was written by Claude at the user's request (exception to the shared-mode split) and explained; the user wrote its test. Finding: declaring `ConstraintViolationException` is enough, Quarkus's built-in mapper does not override it. `./mvnw verify` BUILD SUCCESS (14 unit + 2 IT). Backend of M2 complete; next: frontend (steps 4-5), e2e (step 6).
 - 2026-11-15 — M2 step 4 done (shared mode): frontend `api/sites.ts` (`Site`/`SiteInput` types, `listSites`, `getSite`; `createSite`/`updateSite` still TODO stubs for step 5), `SitesListPage` (loading/error/empty/list, links to detail) and `SiteDetailPage` (`useParams`, `Number(id)`, loading/"Site not found"/back link), routes `/sites` and `/sites/:id`, "Sites" nav link, tests for both pages (`MemoryRouter`). List page + tests written by user (reviewed: fixed state/function name shadowing, `Site[]` return type, `${id}` template literal); detail page + its tests written by Claude at the user's request. `npm run check` green (5 suites, 11 tests). Next: step 5 create/edit form (learning mode), step 6 e2e.
+- 2026-11-15 — **Working mode changed** (user decision): from M2 step 5 on, feedback loop (Claude writes tests first, then code until green; user studies the listed concepts outside the project). M2 step 5 done: `createSite`/`updateSite` (+ `api/sites.test.ts`), `SiteForm` component (controlled inputs, client-side validation: name required/trimmed, threshold > 0, submit error alert, disabled while submitting), `SiteNewPage` (`/sites/new`, navigates to the new site), `SiteEditPage` (`/sites/:id/edit`, prefilled, navigates back to detail), "New site" link on the list (also when empty), "Edit" link on the detail page. `npm run check` green (9 suites, 29 tests). Next: step 6 e2e (create a site, see it in the list) + e2e data-reset decision.
 
 ## Known issues / blocked
 - None.

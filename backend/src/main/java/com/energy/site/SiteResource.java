@@ -19,11 +19,16 @@ import jakarta.ws.rs.NotFoundException;
 import java.net.URI;
 import java.util.List;
 
+/**
+ * REST endpoints for sites, served under /api/v1/sites.
+ * Entities never leave this class: requests arrive as SiteRequest and responses leave as SiteResponse.
+ */
 @Path("/sites")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class SiteResource {
 
+    /** POST /sites: validate, save, answer 201 with a Location header pointing at the new site. */
     @POST
     @Transactional
     public Response create(@Valid SiteRequest request, @Context UriInfo uriInfo) {
@@ -32,6 +37,7 @@ public class SiteResource {
         site.threshold = request.threshold();
         site.persist();
 
+        // Absolute URL of this request + the new id, e.g. .../api/v1/sites/42
         URI location = uriInfo.getAbsolutePathBuilder()
             .path(String.valueOf(site.id))
             .build();
@@ -41,6 +47,7 @@ public class SiteResource {
             .build();
     }
 
+    /** GET /sites: every site, mapped from entities to response records. */
     @GET
     public List<SiteResponse> list() {
         return Site.<Site>listAll()
@@ -49,6 +56,7 @@ public class SiteResource {
             .toList();
     }
 
+    /** GET /sites/{id}: one site, or 404 (NotFoundException is turned into our error body by ErrorMapper). */
     @GET
     @Path("/{id}")
     public SiteResponse get(@PathParam("id") Long id) {
@@ -59,6 +67,10 @@ public class SiteResource {
         return SiteResponse.from(site);
     }
 
+    /**
+     * PUT /sites/{id}: replace name and threshold. 404 if the id is unknown, 400 if the body is invalid.
+     * No persist() call: the entity is managed inside the transaction, so Hibernate saves the changes at commit.
+     */
     @PUT
     @Path("/{id}")
     @Transactional

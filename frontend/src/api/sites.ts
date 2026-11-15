@@ -1,5 +1,9 @@
 import client from './client';
 
+// Typed wrappers around the backend's /api/v1/sites endpoints.
+// Each function returns the response body; a non-2xx status makes Axios throw,
+// and the calling page decides how to show the error.
+
 // Matches the backend's SiteResponse record.
 export interface Site {
   id: number;
@@ -25,12 +29,14 @@ export async function getSite(id: number): Promise<Site> {
   return response.data;
 }
 
-// TODO 3 (used in step 5, can wait): POST /sites with `input` -> the created Site.
+//POST /sites -> the created Site
 export async function createSite(input: SiteInput): Promise<Site> {
-  throw new Error(`TODO ${JSON.stringify(input)}`);
+  const response = await client.post<Site>('/sites', input);
+  return response.data;
 }
 
-// TODO 4 (used in step 5, can wait): PUT /sites/{id} with `input` -> the updated Site.
+//PUT /sites/{id} -> the updated Site
 export async function updateSite(id: number, input: SiteInput): Promise<Site> {
-  throw new Error(`TODO ${id} ${JSON.stringify(input)}`);
+  const response = await client.put<Site>(`/sites/${id}`, input);
+  return response.data;
 }

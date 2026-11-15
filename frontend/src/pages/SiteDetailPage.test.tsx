@@ -34,3 +34,9 @@ test('has a link back to the sites list', async () => {
   renderAt('/sites/1');
   expect(await screen.findByRole('link', { name: /back to sites/i })).toHaveAttribute('href', '/sites');
 });
+
+test('has an edit link to the edit page', async () => {
+  jest.mocked(sitesApi.getSite).mockResolvedValue({ id: 7, name: 'Site A', threshold: 10 });
+  renderAt('/sites/7');
+  expect(await screen.findByRole('link', { name: /edit/i })).toHaveAttribute('href', '/sites/7/edit');
+});

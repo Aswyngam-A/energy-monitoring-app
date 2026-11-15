@@ -1,6 +1,6 @@
 # M2 — Sites
 
-**Status:** In progress (step 4 of 6 done)
+**Status:** In progress (step 5 of 6 done)
 
 ## Goal
 A user can create, list, view and edit sites (name + alert threshold) from the dashboard.
@@ -47,3 +47,4 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 - 2026-11-15 — Step 2 done: POST /sites with validation + 4 tests (+ malformed JSON); verify green.
 - 2026-11-15 — Step 3 done: GET list/get/PUT + validation exception mapper (ErrorResponse shape for 400); 11 resource tests; verify green. Backend complete.
 - 2026-11-15 — Step 4 done: api/sites (list/get), list + detail pages with tests, routes and nav; `npm run check` green (11 tests). `createSite`/`updateSite` are stubs until step 5.
+- 2026-11-15 — Step 5 done (feedback-loop mode): create/edit form with client-side validation, new/edit pages and routes, API create/update; `npm run check` green (29 tests). Remaining: step 6 e2e.

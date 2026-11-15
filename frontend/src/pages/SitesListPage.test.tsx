@@ -38,3 +38,23 @@ test('shows the empty message when listSites resolves []', async () => {
   );
   expect(await screen.findByText(/no sites/i)).toBeInTheDocument();
 });
+
+test('offers a link to create a site, also when the list is empty', async () => {
+  jest.mocked(sitesApi.listSites).mockResolvedValue([]);
+  render(
+    <MemoryRouter>
+      <SitesListPage />
+    </MemoryRouter>
+  );
+  expect(await screen.findByRole('link', { name: /new site/i })).toHaveAttribute('href', '/sites/new');
+});
+
+test('offers a link to create a site next to the list', async () => {
+  jest.mocked(sitesApi.listSites).mockResolvedValue([{ id: 1, name: 'Site A', threshold: 10 }]);
+  render(
+    <MemoryRouter>
+      <SitesListPage />
+    </MemoryRouter>
+  );
+  expect(await screen.findByRole('link', { name: /new site/i })).toHaveAttribute('href', '/sites/new');
+});
