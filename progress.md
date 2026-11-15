@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M4 — Readings ingestion, in progress (step 2 of 7 done)
+**Current milestone:** M4 — Readings ingestion, in progress (step 3 of 7 done (backend complete))
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -70,6 +70,7 @@
 - 2026-11-15 — **M3 done.** Step 6: `e2e/tests/sensors.spec.ts` (register a sensor and see it listed, survives a reload; empty name refused; a sensor only shows on its own site). Red first against the old images, then green after `docker compose up -d --build`. Data strategy as in M2 (unique names, no cleanup); second run on the same DB also passed. All checks green: `./mvnw verify` (26 unit + 2 IT), `npm run check` (43 tests), `playwright test` (7 passed). Step 5 pushed as ba0583c, CI green. M3 section added to `docs/learning-notes.md`.
 - 2026-11-15 — **M4 step 1 done.** Decisions: unit = kW by convention (no column); timestamp optional from the client, defaulting to server time, stored as UTC `Instant`; future timestamps (> 5 min) rejected with 400, old ones accepted; value `BigDecimal`, >= 0, `NUMERIC(12,3)`. Added `ReadingTest`, `Reading` entity (`@ManyToOne(LAZY)` to `Sensor`, field `timestamp` mapped to column `recorded_at`) and `V3__create_reading.sql` (`reading_seq` step 50, FK `sensor_id`, composite index `(sensor_id, recorded_at)`). Red first (class missing). `./mvnw verify` green (28 unit + 2 IT). M3 pushed as 35afb8d, CI green. Next: step 2 POST /sensors/{sensorId}/readings.
 - 2026-11-15 — **M4 step 2 done.** `POST /api/v1/sensors/{sensorId}/readings`: `ReadingRequest` (`@NotNull @PositiveOrZero @Digits(9,3) value`, optional `Instant timestamp`), `ReadingResponse` (incl. `sensorId`), `ReadingResource` (404 unknown sensor; 400 for bad body in the shared ErrorResponse shape; 400 `BadRequestException` when the timestamp is > 5 min ahead; server time when absent; old timestamps accepted). No `Location` header (single readings have no URL in the API). 11 `ReadingResourceTest` tests, 10 red first (404). `./mvnw verify` green (39 unit + 2 IT). Step 1 pushed as 3792028, CI green (first two push attempts timed out; third worked). Next: step 3 GET /sites/{siteId}/readings?from=&to=.
+- 2026-11-15 — **M4 step 3 done (backend complete).** `GET /api/v1/sites/{siteId}/readings?from=&to=` in the new `SiteReadingsResource`: all readings of the site's sensors, newest first; `from`/`to` optional ISO-8601 instants, both inclusive; 404 unknown site; 400 for a malformed date or `from` after `to` (query params read as strings and parsed by hand for a clear 400). One query with `join fetch` (no per-row lazy loads); optional filters appended to the HQL only when given (PostgreSQL cannot infer the type of a null parameter). `ReadingResponse` gained `sensorName` (additive; POST responses now include it). 12 new tests (`SiteReadingsResourceTest`), 11 red first. `./mvnw verify` green (51 unit + 2 IT). Step 2 pushed as 03d0a29, CI green. Next: step 4 frontend `api/readings.ts`.
 
 ## Known issues / blocked
-- None.
+- Site readings list is unbounded (no limit/paging): fine for practice data, revisit in M7.
