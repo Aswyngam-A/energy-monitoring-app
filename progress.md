@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M3 — Sensors, in progress (step 5 of 6 done)
+**Current milestone:** M4 — not started (M3 Sensors done)
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -16,7 +16,7 @@
 | M1a | Local foundations | Done | [docs/milestones/M1a-local-foundations.md](docs/milestones/M1a-local-foundations.md) |
 | M1b | Running it together | Done | [docs/milestones/M1b-running-together.md](docs/milestones/M1b-running-together.md) |
 | M2 | Sites | Done | [docs/milestones/M2-sites.md](docs/milestones/M2-sites.md) |
-| M3 | Sensors | In progress | [docs/milestones/M3-sensors.md](docs/milestones/M3-sensors.md) |
+| M3 | Sensors | Done | [docs/milestones/M3-sensors.md](docs/milestones/M3-sensors.md) |
 | M4 | Readings ingestion | Not started | [docs/milestones/M4-readings.md](docs/milestones/M4-readings.md) |
 | M5 | Alerts | Not started | [docs/milestones/M5-alerts.md](docs/milestones/M5-alerts.md) |
 | M6 | Alert lifecycle | Not started | [docs/milestones/M6-alert-lifecycle.md](docs/milestones/M6-alert-lifecycle.md) |
@@ -67,6 +67,7 @@
 - 2026-11-15 — **M3 step 3 done (backend complete).** `GET /sites/{siteId}/sensors` (200, `[]` when empty, 404 unknown site; filtered in the DB with `site.id`) in `SensorResource`, and `GET /sensors/{id}` (200 / 404) in the new `SensorLookupResource` (a JAX-RS class has one root path, and the nested one differs). 5 new tests (10 in `SensorResourceTest`), the 3 happy-path ones red first. Step 2 pushed as 0135a6e, CI green. `./mvnw verify` green (26 unit + 2 IT). Next: step 4 frontend `api/sensors.ts`.
 - 2026-11-15 — **M3 step 4 done.** `frontend/src/api/sensors.ts` (`Sensor` with `type: string | null`, `SensorInput` with optional `type`, `listSensors(siteId)`, `getSensor(id)`, `createSensor(siteId, input)`) + `sensors.test.ts` (4 tests, red first: module missing). `npm run check` green (10 suites, 33 tests). Step 3 pushed as 569cea8, CI green. Next: step 5 sensors section + add-sensor form on the site detail page.
 - 2026-11-15 — **M3 step 5 done.** Site detail page now shows a sensors section: `SensorForm` (name required, optional type, blank type left out of the body, clears after success, alert on failure), `SensorsSection` (loads `listSensors(siteId)`, loading / empty / error states, appends the created sensor to the list), rendered by `SiteDetailPage`. `SiteDetailPage.test` stubs `SensorsSection` (its own tests cover it) and gains one test that it is rendered for the site. 10 new tests, red first (modules missing). `npm run check` green (12 suites, 43 tests). Step 4 pushed as fd17027, CI green. Next: step 6 e2e + M3 close-out (docs, learning-notes section).
+- 2026-11-15 — **M3 done.** Step 6: `e2e/tests/sensors.spec.ts` (register a sensor and see it listed, survives a reload; empty name refused; a sensor only shows on its own site). Red first against the old images, then green after `docker compose up -d --build`. Data strategy as in M2 (unique names, no cleanup); second run on the same DB also passed. All checks green: `./mvnw verify` (26 unit + 2 IT), `npm run check` (43 tests), `playwright test` (7 passed). Step 5 pushed as ba0583c, CI green. M3 section added to `docs/learning-notes.md`.
 
 ## Known issues / blocked
 - None.
