@@ -1,6 +1,6 @@
 # Runs on every push to main and on every pull request; the three jobs run in parallel.
 # Actions are pinned to a major version (checkout v7, setup-node v7, setup-java v6: the Node 24 based
-# releases; v4 ran on the deprecated Node 20). the runner is pinned to ubuntu-26.04 (what ubuntu-latest became in Oct 2026) so an image change never surprises a build.
+# releases; v4 ran on the deprecated Node 20). The runner is pinned to ubuntu-26.04 (what ubuntu-latest became in Oct 2026) so an image change never surprises a build.
 name: CI
 
 on:
