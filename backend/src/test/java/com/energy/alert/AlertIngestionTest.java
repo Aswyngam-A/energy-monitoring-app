@@ -132,11 +132,30 @@ class AlertIngestionTest {
         assertEquals(0, alerts().size());
     }
 
+    /** Moves every alert of the sensor to the given status (as the PATCH endpoint would). */
+    @Transactional
+    void setStatusOfAlerts(Long sensorId, AlertStatus status) {
+        Alert.<Alert>list("sensor.id", sensorId).forEach(a -> a.status = status);
+    }
+
+    /** A second sensor on the same site as the given one; returns its id. */
+    @Transactional
+    Long insertSecondSensorOnSameSite(Long sensorId) {
+        Sensor other = new Sensor();
+        other.name = "Second meter";
+        other.site = Sensor.<Sensor>findById(sensorId).site;
+        other.persist();
+        return other.id;
+    }
+
+    // Dedup rule (M6): while a sensor has an OPEN or ACKNOWLEDGED alert, further breaches are
+    // stored as readings but raise no new alert. (Before M6 every breach raised its own alert;
+    // that test was replaced because the rule itself changed, not weakened.)
+
     @Test
-    void everyBreachingReadingRaisesItsOwnAlert() {
+    void secondBreachWhileTheAlertIsOpenRaisesNoNewAlert() {
         Long sensorId = insertSensor("100.00");
 
-        // No de-duplication yet (that is a later milestone): two breaches, two alerts.
         postReading(sensorId, """
             { "value": 120 }
             """).statusCode(201);
@@ -144,8 +163,58 @@ class AlertIngestionTest {
             { "value": 130 }
             """).statusCode(201);
 
-        assertEquals(2, alerts().size());
+        assertEquals(1, alerts().size());
+        // Both readings are stored; the alert points at the first one.
         assertEquals(2, Reading.count());
+        assertEquals(0, new BigDecimal("120").compareTo(alerts().get(0).value()));
+    }
+
+    @Test
+    void breachWhileTheAlertIsAcknowledgedRaisesNoNewAlert() {
+        Long sensorId = insertSensor("100.00");
+        postReading(sensorId, """
+            { "value": 120 }
+            """).statusCode(201);
+        setStatusOfAlerts(sensorId, AlertStatus.ACKNOWLEDGED);
+
+        postReading(sensorId, """
+            { "value": 130 }
+            """).statusCode(201);
+
+        assertEquals(1, alerts().size());
+    }
+
+    @Test
+    void breachAfterTheAlertWasResolvedRaisesANewAlert() {
+        Long sensorId = insertSensor("100.00");
+        postReading(sensorId, """
+            { "value": 120 }
+            """).statusCode(201);
+        setStatusOfAlerts(sensorId, AlertStatus.RESOLVED);
+
+        postReading(sensorId, """
+            { "value": 130 }
+            """).statusCode(201);
+
+        List<AlertView> alerts = alerts();
+        assertEquals(2, alerts.size());
+        assertEquals(1, alerts.stream().filter(a -> a.status() == AlertStatus.OPEN).count());
+    }
+
+    @Test
+    void dedupIsPerSensorNotPerSite() {
+        Long first = insertSensor("100.00");
+        Long second = insertSecondSensorOnSameSite(first);
+
+        postReading(first, """
+            { "value": 120 }
+            """).statusCode(201);
+        postReading(second, """
+            { "value": 130 }
+            """).statusCode(201);
+
+        // Same site, different sensors: each gets its own alert.
+        assertEquals(2, alerts().size());
     }
 
     @Test

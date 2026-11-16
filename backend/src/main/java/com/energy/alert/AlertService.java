@@ -5,6 +5,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -19,12 +21,16 @@ public class AlertService {
 
     /**
      * Raises an alert for the reading if it is above its site's threshold; does nothing otherwise.
+     * Dedup (M6): if the sensor already has an active alert (OPEN or ACKNOWLEDGED), no second one is
+     * raised, so a sensor that stays above the threshold does not flood the list. Once that alert is
+     * RESOLVED, the next breach raises a new one. The reading itself is always stored by the caller.
      *
      * @Transactional with the default (REQUIRED) joins the caller's transaction when there is one,
      * so the reading and its alert are committed together or not at all, and starts its own
      * transaction when called alone.
      *
-     * @return the new alert, or empty when the reading is within the threshold
+     * @return the new alert, or empty when the reading is within the threshold or the sensor
+     *         already has an active alert
      */
     @Transactional
     public Optional<Alert> raiseIfBreached(Reading reading) {
@@ -33,6 +39,15 @@ public class AlertService {
         var site = sensor.site;
 
         if (!ThresholdRule.isBreached(reading.value, site.threshold)) {
+            return Optional.empty();
+        }
+
+        // Dedup is per sensor (not per site): two meters on one site each report their own problem.
+        // The active statuses come from AlertTransitions, so the rule lives in one place.
+        List<AlertStatus> active = Arrays.stream(AlertStatus.values())
+                .filter(AlertTransitions::isActive)
+                .toList();
+        if (Alert.count("sensor.id = ?1 and status in ?2", sensor.id, active) > 0) {
             return Optional.empty();
         }
 

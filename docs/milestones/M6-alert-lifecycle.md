@@ -37,3 +37,4 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 - Plan: 1 `AlertStatus` + pure `AlertTransitions` rule + unit tests; 2 `PATCH /alerts/{id}` (200/400/404); 3 dedup in `AlertService`; 4 `GET /alerts?status=`; 5 frontend API client (`updateAlertStatus`, status param) + alerts page buttons and filter (refetch after change, badge counts only OPEN so the shared state needs a refresh); 6 e2e + close-out.
 - 2026-11-16 — Step 1 done: enum values, `AlertTransitions` + 8 unit tests; verify green (84 unit + 2 IT).
 - 2026-11-16 — Step 2 done: PATCH /alerts/{id} (200/400/404), 9 tests; verify green (93 unit + 2 IT).
+- 2026-11-16 — Step 3 done: dedup per sensor in AlertService, 4 new ingestion tests replacing the pre-M6 one; all checks green (96 unit + 2 IT, 77 frontend, 16 e2e).
