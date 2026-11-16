@@ -98,6 +98,8 @@ input, select {
 }
 input:hover, select:hover { border-color: var(--ink); }
 input[aria-invalid='true'] { border-color: var(--danger); }
+/* One clear focus ring: the control's own border turns teal and the outline hugs it (no double line). */
+input:focus-visible, select:focus-visible { outline-offset: 0; border-color: var(--accent); }
 
 /* ============ Dashboard ============ */
 /* Ledger tiles: one hairline grid, cells share their borders instead of floating as cards. */
@@ -135,7 +137,10 @@ input[aria-invalid='true'] { border-color: var(--danger); }
 .ledger .num { text-align: right; }
 /* The value that crossed the threshold is the only red in the table. */
 .ledger .over { color: var(--danger); font-weight: 500; }
-.ledger .actions { display: flex; gap: var(--s2); justify-content: flex-end; }
+/* Never make a <td> display:flex: it stops being a table cell and drops out of the row's alignment.
+   The cell stays a cell; its buttons just sit side by side, right-aligned. */
+.ledger .actions { text-align: right; white-space: nowrap; }
+.ledger .actions button + button { margin-left: var(--s2); }
 .ledger .actions button { min-height: 26px; font-size: 13px; }
 .empty { color: var(--muted); padding: var(--s5) 0; }
 
