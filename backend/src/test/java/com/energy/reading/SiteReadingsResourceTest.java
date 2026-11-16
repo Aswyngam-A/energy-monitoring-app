@@ -89,9 +89,9 @@ class SiteReadingsResourceTest {
 
         get(siteId, null, null)
             .statusCode(200)
-            .body("size()", is(3))
+            .body("items.size()", is(3))
             // Newest first: values 3, 2, 1.
-            .body("value", contains(3f, 2f, 1f));
+            .body("items.value", contains(3f, 2f, 1f));
     }
 
     @Test
@@ -104,9 +104,9 @@ class SiteReadingsResourceTest {
 
         get(siteId, null, null)
             .statusCode(200)
-            .body("size()", is(2))
-            .body("sensorName", hasItems("Meter", "Thermo"))
-            .body("sensorId", hasItems(meter.intValue(), thermo.intValue()));
+            .body("items.size()", is(2))
+            .body("items.sensorName", hasItems("Meter", "Thermo"))
+            .body("items.sensorId", hasItems(meter.intValue(), thermo.intValue()));
     }
 
     @Test
@@ -118,8 +118,8 @@ class SiteReadingsResourceTest {
 
         get(siteA, null, null)
             .statusCode(200)
-            .body("size()", is(3))
-            .body("value", contains(3f, 2f, 1f));
+            .body("items.size()", is(3))
+            .body("items.value", contains(3f, 2f, 1f));
     }
 
     @Test
@@ -129,7 +129,7 @@ class SiteReadingsResourceTest {
         // Inclusive: the reading exactly at T2 is kept.
         get(siteId, T2, null)
             .statusCode(200)
-            .body("value", contains(3f, 2f));
+            .body("items.value", contains(3f, 2f));
     }
 
     @Test
@@ -138,7 +138,7 @@ class SiteReadingsResourceTest {
 
         get(siteId, null, T2)
             .statusCode(200)
-            .body("value", contains(2f, 1f));
+            .body("items.value", contains(2f, 1f));
     }
 
     @Test
@@ -147,7 +147,7 @@ class SiteReadingsResourceTest {
 
         get(siteId, T2, T2)
             .statusCode(200)
-            .body("value", contains(2f));
+            .body("items.value", contains(2f));
     }
 
     @Test
@@ -156,7 +156,7 @@ class SiteReadingsResourceTest {
 
         get(siteId, "2030-01-01T00:00:00Z", null)
             .statusCode(200)
-            .body("size()", is(0));
+            .body("items.size()", is(0));
     }
 
     @Test
@@ -165,7 +165,7 @@ class SiteReadingsResourceTest {
 
         get(siteId, null, null)
             .statusCode(200)
-            .body("size()", is(0));
+            .body("items.size()", is(0));
     }
 
     @Test
@@ -194,5 +194,56 @@ class SiteReadingsResourceTest {
     @Test
     void unknownSiteReturns404() {
         get(999999L, null, null).statusCode(404);
+    }
+
+    // ---- pagination (M7): the list is a page { items, page, size, total } ----
+
+    private ValidatableResponse getPage(Long siteId, String page, String size) {
+        var request = given();
+        if (page != null) request = request.queryParam("page", page);
+        if (size != null) request = request.queryParam("size", size);
+        return request.when().get(PATH, siteId).then();
+    }
+
+    @Test
+    void responseIsAPageWithItsMetadata() {
+        Long siteId = siteWithThreeReadings();
+
+        getPage(siteId, null, null)
+            .statusCode(200)
+            .body("items.size()", is(3))
+            .body("page", is(0))
+            .body("size", is(20))
+            .body("total", is(3));
+    }
+
+    @Test
+    void pagesSliceTheNewestFirstOrder() {
+        Long siteId = siteWithThreeReadings();
+
+        getPage(siteId, "0", "2").body("items.value", contains(3f, 2f)).body("total", is(3));
+        getPage(siteId, "1", "2").body("items.value", contains(1f)).body("page", is(1));
+        getPage(siteId, "2", "2").body("items.size()", is(0)).body("total", is(3));
+    }
+
+    @Test
+    void totalFollowsTheDateRange() {
+        Long siteId = siteWithThreeReadings();
+
+        // T2..T3 holds two readings; page size 1 shows one of them but total says 2.
+        given().queryParam("from", T2).queryParam("size", 1)
+            .when().get(PATH, siteId).then()
+            .statusCode(200)
+            .body("items.value", contains(3f))
+            .body("total", is(2));
+    }
+
+    @Test
+    void badPageOrSizeReturns400() {
+        Long siteId = siteWithThreeReadings();
+
+        getPage(siteId, "-1", null).statusCode(400);
+        getPage(siteId, null, "0").statusCode(400);
+        getPage(siteId, null, "101").statusCode(400);
     }
 }

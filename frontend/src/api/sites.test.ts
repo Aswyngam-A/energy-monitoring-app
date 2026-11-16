@@ -1,7 +1,7 @@
 // Unit tests for the sites API client. The Axios client is mocked, so no network is used:
 // we only check which URL and body each function sends and what it returns.
 import client from './client';
-import { createSite, updateSite } from './sites';
+import { createSite, listSites, updateSite } from './sites';
 
 jest.mock('./client');
 
@@ -17,4 +17,14 @@ test('updateSite PUTs the input to /sites/{id} and returns the updated site', as
   const site = await updateSite(5, { name: 'B', threshold: 20 });
   expect(client.put).toHaveBeenCalledWith('/sites/5', { name: 'B', threshold: 20 });
   expect(site).toEqual({ id: 5, name: 'B', threshold: 20 });
+});
+
+test('listSites GETs the largest page of sites and returns its items', async () => {
+  // Page shape { items, page, size, total } (M7); the client asks for 100 until pagination controls exist.
+  jest.mocked(client.get).mockResolvedValue({
+    data: { items: [{ id: 1, name: 'A', threshold: 10 }], page: 0, size: 100, total: 1 },
+  });
+  const result = await listSites();
+  expect(client.get).toHaveBeenCalledWith('/sites', { params: { size: 100 } });
+  expect(result).toEqual([{ id: 1, name: 'A', threshold: 10 }]);
 });

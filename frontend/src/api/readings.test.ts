@@ -13,26 +13,30 @@ const reading = {
   sensorName: 'Main meter',
 };
 
-test('listSiteReadings GETs the readings of the site without query parameters when no range is given', async () => {
-  jest.mocked(client.get).mockResolvedValue({ data: [reading] });
+// The backend answers with a page { items, page, size, total } (M7). Until the pagination controls
+// exist (M7 step 5) the client asks for the largest page (100) and returns its items.
+const page = (items: object[]) => ({ items, page: 0, size: 100, total: items.length });
+
+test('listSiteReadings GETs the largest page of the site and returns its items when no range is given', async () => {
+  jest.mocked(client.get).mockResolvedValue({ data: page([reading]) });
   const result = await listSiteReadings(7);
-  expect(client.get).toHaveBeenCalledWith('/sites/7/readings', { params: {} });
+  expect(client.get).toHaveBeenCalledWith('/sites/7/readings', { params: { size: 100 } });
   expect(result).toEqual([reading]);
 });
 
 test('listSiteReadings sends from and to as query parameters', async () => {
-  jest.mocked(client.get).mockResolvedValue({ data: [] });
+  jest.mocked(client.get).mockResolvedValue({ data: page([]) });
   await listSiteReadings(7, { from: '2024-05-01T10:00:00Z', to: '2024-05-01T12:00:00Z' });
   expect(client.get).toHaveBeenCalledWith('/sites/7/readings', {
-    params: { from: '2024-05-01T10:00:00Z', to: '2024-05-01T12:00:00Z' },
+    params: { from: '2024-05-01T10:00:00Z', to: '2024-05-01T12:00:00Z', size: 100 },
   });
 });
 
 test('listSiteReadings leaves out a bound that is missing or blank', async () => {
-  jest.mocked(client.get).mockResolvedValue({ data: [] });
+  jest.mocked(client.get).mockResolvedValue({ data: page([]) });
   await listSiteReadings(7, { from: '2024-05-01T10:00:00Z', to: '' });
   expect(client.get).toHaveBeenCalledWith('/sites/7/readings', {
-    params: { from: '2024-05-01T10:00:00Z' },
+    params: { from: '2024-05-01T10:00:00Z', size: 100 },
   });
 });
 

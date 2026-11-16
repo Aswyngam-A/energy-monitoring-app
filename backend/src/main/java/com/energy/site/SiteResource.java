@@ -1,6 +1,12 @@
 package com.energy.site;
 
+import com.energy.common.PageParams;
+import com.energy.common.PageResponse;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -47,13 +53,21 @@ public class SiteResource {
             .build();
     }
 
-    /** GET /sites: every site, mapped from entities to response records. */
+    /**
+     * GET /sites?page=&size=: one page of sites, newest first (highest id), mapped from entities to
+     * response records. A fixed order is needed for paging: without one, the database may return
+     * rows in a different order on each request and pages could overlap or skip rows.
+     * Newest first, so a site that was just created is on the first page.
+     */
     @GET
-    public List<SiteResponse> list() {
-        return Site.<Site>listAll()
-            .stream()
-            .map(SiteResponse::from)
-            .toList();
+    public PageResponse<SiteResponse> list(@QueryParam("page") String pageText,
+                                           @QueryParam("size") String sizeText) {
+        PageParams paging = PageParams.parse(pageText, sizeText);
+        PanacheQuery<Site> query = Site.findAll(Sort.descending("id"));
+
+        List<SiteResponse> items = query.page(Page.of(paging.page(), paging.size()))
+            .list().stream().map(SiteResponse::from).toList();
+        return new PageResponse<>(items, paging.page(), paging.size(), query.count());
     }
 
     /** GET /sites/{id}: one site, or 404 (NotFoundException is turned into our error body by ErrorMapper). */

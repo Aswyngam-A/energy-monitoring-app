@@ -112,7 +112,51 @@ class SiteResourceTest {
             .when().get()
             .then()
                 .statusCode(200)
-                .body("size()", is(2));
+                .body("items.size()", is(2))
+                .body("total", is(2));
+    }
+
+    // ---- pagination (M7): the list is a page { items, page, size, total }, newest site first ----
+
+    @Test
+    void listIsAPageOrderedNewestFirst() {
+        insertSite("A", "10.00");
+        insertSite("B", "20.00");
+        insertSite("C", "30.00");
+
+        given().queryParam("size", 2)
+            .when().get()
+            .then()
+                .statusCode(200)
+                .body("items.name", org.hamcrest.Matchers.contains("C", "B"))
+                .body("page", is(0))
+                .body("size", is(2))
+                .body("total", is(3));
+
+        given().queryParam("page", 1).queryParam("size", 2)
+            .when().get()
+            .then()
+                .statusCode(200)
+                .body("items.name", org.hamcrest.Matchers.contains("A"))
+                .body("total", is(3));
+    }
+
+    @Test
+    void listWithDefaultsUsesPageZeroAndSizeTwenty() {
+        insertSite("A", "10.00");
+
+        given()
+            .when().get()
+            .then()
+                .body("page", is(0))
+                .body("size", is(20));
+    }
+
+    @Test
+    void listWithBadPageOrSizeReturns400() {
+        given().queryParam("page", -1).when().get().then().statusCode(400);
+        given().queryParam("size", 101).when().get().then().statusCode(400);
+        given().queryParam("size", "abc").when().get().then().statusCode(400);
     }
 
     @Test

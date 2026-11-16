@@ -1,6 +1,10 @@
 package com.energy.reading;
 
+import com.energy.common.PageParams;
+import com.energy.common.PageResponse;
 import com.energy.site.Site;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Page;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
@@ -25,7 +29,8 @@ import java.util.Map;
 public class SiteReadingsResource {
 
     /**
-     * GET /sites/{siteId}/readings?from=&to=: the readings of every sensor of the site, newest first.
+     * GET /sites/{siteId}/readings?from=&to=&page=&size=: one page of the readings of every sensor
+     * of the site, newest first.
      * `from` and `to` are optional ISO-8601 instants (e.g. 2024-05-01T10:00:00Z); both ends are
      * inclusive. 404 if the site is unknown, 400 if a date is malformed or `from` is after `to`.
      *
@@ -33,13 +38,16 @@ public class SiteReadingsResource {
      * our own clear 400 instead of depending on how the framework reacts to a failed conversion.
      */
     @GET
-    public List<ReadingResponse> list(@PathParam("siteId") Long siteId,
-                                      @QueryParam("from") String from,
-                                      @QueryParam("to") String to) {
+    public PageResponse<ReadingResponse> list(@PathParam("siteId") Long siteId,
+                                              @QueryParam("from") String from,
+                                              @QueryParam("to") String to,
+                                              @QueryParam("page") String pageText,
+                                              @QueryParam("size") String sizeText) {
         if (Site.findById(siteId) == null) {
             throw new NotFoundException("Site " + siteId + " not found");
         }
 
+        PageParams paging = PageParams.parse(pageText, sizeText);
         Instant fromInstant = parseInstant("from", from);
         Instant toInstant = parseInstant("to", to);
         if (fromInstant != null && toInstant != null && fromInstant.isAfter(toInstant)) {
@@ -63,12 +71,15 @@ public class SiteReadingsResource {
             hql.append(" and r.timestamp <= :to");
             params.put("to", toInstant);
         }
-        hql.append(" order by r.timestamp desc");
+        // id breaks ties between readings with the same timestamp, so page boundaries are stable.
+        hql.append(" order by r.timestamp desc, r.id desc");
 
-        return Reading.<Reading>find(hql.toString(), params)
-            .stream()
-            .map(ReadingResponse::from)
-            .toList();
+        PanacheQuery<Reading> query = Reading.find(hql.toString(), params);
+        List<ReadingResponse> items = query.page(Page.of(paging.page(), paging.size()))
+            .list().stream().map(ReadingResponse::from).toList();
+        // Panache derives the COUNT from the same query (dropping the join fetch and the order),
+        // so the total respects the site and the date range.
+        return new PageResponse<>(items, paging.page(), paging.size(), query.count());
     }
 
     /** Parses an optional ISO-8601 instant; null stays null, garbage becomes a 400 naming the parameter. */

@@ -17,10 +17,12 @@ export interface SiteInput {
   threshold: number;
 }
 
-//GET /sites -> Site[]
+//GET /sites -> a page { items, page, size, total }.
+// TEMPORARY (until M7 step 5 adds pagination controls): ask for the largest page allowed (100)
+// and return only its items.
 export async function listSites(): Promise<Site[]> {
-  const response = await client.get<Site[]>('/sites');
-  return response.data;
+  const response = await client.get<{ items: Site[] }>('/sites', { params: { size: 100 } });
+  return response.data.items;
 }
 
 //GET /sites/{id} -> Site.
