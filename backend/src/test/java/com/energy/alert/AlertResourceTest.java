@@ -18,8 +18,9 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.contains;
 
 /**
- * HTTP-level tests for GET /api/v1/alerts?siteId=: all alerts newest first, optionally only
- * those of one site; 400 for a malformed siteId and 404 for an unknown site.
+ * HTTP-level tests for /api/v1/alerts: GET (all alerts newest first, optionally only those of one
+ * site; 400 for a malformed siteId, 404 for an unknown site) and PATCH /{id} (move an alert to
+ * another status following AlertTransitions; 400 for an illegal move or a bad body, 404 if missing).
  * Alerts are inserted directly (not through ingestion) so each test controls the exact data.
  */
 @QuarkusTest
@@ -47,6 +48,12 @@ class AlertResourceTest {
     /** Saves a reading plus the alert it raised, with a chosen value and creation time. Returns the alert id. */
     @Transactional
     Long insertAlert(Ids ids, String value, String createdAt) {
+        return insertAlert(ids, value, createdAt, AlertStatus.OPEN);
+    }
+
+    /** Same, with a chosen status (for the PATCH tests). */
+    @Transactional
+    Long insertAlert(Ids ids, String value, String createdAt, AlertStatus status) {
         Reading reading = new Reading();
         reading.sensor = Sensor.findById(ids.sensorId());
         reading.value = new BigDecimal(value);
@@ -60,7 +67,7 @@ class AlertResourceTest {
         alert.value = reading.value;
         alert.threshold = new BigDecimal("100.00");
         alert.createdAt = Instant.parse(createdAt);
-        alert.status = AlertStatus.OPEN;
+        alert.status = status;
         alert.persist();
         return alert.id;
     }
@@ -154,5 +161,93 @@ class AlertResourceTest {
         get("abc")
             .statusCode(400)
             .body("status", is(400));
+    }
+
+    // ---- PATCH /alerts/{id} ----
+
+    private ValidatableResponse patch(Object alertId, String body) {
+        return given()
+            .contentType("application/json")
+            .body(body)
+            .when().patch(PATH + "/" + alertId)
+            .then();
+    }
+
+    /** Reads the status back through the API (the source of truth for the client). */
+    private String statusOf(Long alertId) {
+        return given().when().get(PATH).then().extract()
+            .path("find { it.id == " + alertId + " }.status");
+    }
+
+    @Test
+    void acknowledgesAnOpenAlert() {
+        Long id = insertAlert(insertSiteWithSensor("A"), "150", "2024-05-01T10:00:00Z");
+
+        patch(id, "{\"status\":\"ACKNOWLEDGED\"}")
+            .statusCode(200)
+            // The response is the updated alert, same shape as in the list.
+            .body("id", is(id.intValue()))
+            .body("status", is("ACKNOWLEDGED"));
+        org.junit.jupiter.api.Assertions.assertEquals("ACKNOWLEDGED", statusOf(id));
+    }
+
+    @Test
+    void resolvesAnAcknowledgedAlert() {
+        Long id = insertAlert(insertSiteWithSensor("A"), "150", "2024-05-01T10:00:00Z", AlertStatus.ACKNOWLEDGED);
+
+        patch(id, "{\"status\":\"RESOLVED\"}").statusCode(200).body("status", is("RESOLVED"));
+        org.junit.jupiter.api.Assertions.assertEquals("RESOLVED", statusOf(id));
+    }
+
+    @Test
+    void resolvesAnOpenAlertDirectly() {
+        Long id = insertAlert(insertSiteWithSensor("A"), "150", "2024-05-01T10:00:00Z");
+
+        patch(id, "{\"status\":\"RESOLVED\"}").statusCode(200).body("status", is("RESOLVED"));
+    }
+
+    @Test
+    void refusesToReopenAResolvedAlert() {
+        Long id = insertAlert(insertSiteWithSensor("A"), "150", "2024-05-01T10:00:00Z", AlertStatus.RESOLVED);
+
+        patch(id, "{\"status\":\"OPEN\"}")
+            .statusCode(400)
+            .body("message", org.hamcrest.Matchers.containsString("RESOLVED"));
+        // Nothing changed.
+        org.junit.jupiter.api.Assertions.assertEquals("RESOLVED", statusOf(id));
+    }
+
+    @Test
+    void refusesToMoveToTheCurrentStatus() {
+        Long id = insertAlert(insertSiteWithSensor("A"), "150", "2024-05-01T10:00:00Z");
+
+        patch(id, "{\"status\":\"OPEN\"}").statusCode(400);
+    }
+
+    @Test
+    void refusesToGoBackFromAcknowledgedToOpen() {
+        Long id = insertAlert(insertSiteWithSensor("A"), "150", "2024-05-01T10:00:00Z", AlertStatus.ACKNOWLEDGED);
+
+        patch(id, "{\"status\":\"OPEN\"}").statusCode(400);
+        org.junit.jupiter.api.Assertions.assertEquals("ACKNOWLEDGED", statusOf(id));
+    }
+
+    @Test
+    void refusesAnUnknownStatusName() {
+        Long id = insertAlert(insertSiteWithSensor("A"), "150", "2024-05-01T10:00:00Z");
+
+        patch(id, "{\"status\":\"EXPLODED\"}").statusCode(400);
+    }
+
+    @Test
+    void refusesAMissingStatus() {
+        Long id = insertAlert(insertSiteWithSensor("A"), "150", "2024-05-01T10:00:00Z");
+
+        patch(id, "{}").statusCode(400);
+    }
+
+    @Test
+    void unknownAlertIs404() {
+        patch(999999, "{\"status\":\"ACKNOWLEDGED\"}").statusCode(404);
     }
 }

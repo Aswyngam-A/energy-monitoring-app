@@ -2,10 +2,15 @@ package com.energy.alert;
 
 import com.energy.site.Site;
 import io.quarkus.panache.common.Sort;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
@@ -18,6 +23,7 @@ import java.util.List;
  */
 @Path("/alerts")
 @Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class AlertResource {
 
     /**
@@ -47,6 +53,29 @@ public class AlertResource {
         }
 
         return alerts.stream().map(AlertResponse::from).toList();
+    }
+
+    /**
+     * PATCH /alerts/{id} with {"status": "..."}: moves the alert to another status.
+     * PATCH (not PUT) because only one field is changed, not the whole alert.
+     * 404 if the alert does not exist, 400 if the move is not allowed (see AlertTransitions)
+     * or the body is invalid. Returns the updated alert.
+     */
+    @PATCH
+    @Path("/{id}")
+    @Transactional
+    public AlertResponse updateStatus(@PathParam("id") Long id, @Valid AlertStatusRequest request) {
+        Alert alert = Alert.findById(id);
+        if (alert == null) {
+            throw new NotFoundException("Alert " + id + " not found");
+        }
+        if (!AlertTransitions.isAllowed(alert.status, request.status())) {
+            throw new BadRequestException(
+                "Cannot change an alert from " + alert.status + " to " + request.status());
+        }
+        // The entity is managed inside this transaction, so the change is saved on commit.
+        alert.status = request.status();
+        return AlertResponse.from(alert);
     }
 
     /** Parses the optional siteId: absent or blank stays null (no filter), garbage becomes a 400. */
