@@ -15,7 +15,9 @@ jest.mock('../api/readings');
 // Stub: shows how many readings it received, which is all this page is responsible for.
 jest.mock('../components/ReadingsChart', () => ({
   __esModule: true,
-  default: ({ readings }: { readings: unknown[] }) => <div>chart with {readings.length} readings</div>,
+  default: ({ readings, threshold }: { readings: unknown[]; threshold?: number }) => (
+    <div data-threshold={threshold}>chart with {readings.length} readings</div>
+  ),
 }));
 
 beforeEach(() => {
@@ -23,8 +25,8 @@ beforeEach(() => {
 });
 
 const summary: dashboardApi.SiteSummary[] = [
-  { siteId: 1, siteName: 'Alpha', latestReading: { value: 12.5, timestamp: '2024-05-01T10:15:30Z' }, openAlerts: 2 },
-  { siteId: 2, siteName: 'Bravo', latestReading: null, openAlerts: 0 },
+  { siteId: 1, siteName: 'Alpha', threshold: 20, latestReading: { value: 12.5, timestamp: '2024-05-01T10:15:30Z' }, openAlerts: 2, trend: [8, 10, 12.5] },
+  { siteId: 2, siteName: 'Bravo', threshold: 50, latestReading: null, openAlerts: 0, trend: [] },
 ];
 
 const readings: readingsApi.Reading[] = [
@@ -158,7 +160,7 @@ test('a failed refresh keeps showing the data already on screen', async () => {
 /** A summary page for the paging tests: `names` are the sites on that page. */
 function summaryPage(names: string[], page: number, total: number) {
   return pageOf(
-    names.map((name, i) => ({ siteId: page * 100 + i + 1, siteName: name, latestReading: null, openAlerts: 0 })),
+    names.map((name, i) => ({ siteId: page * 100 + i + 1, siteName: name, threshold: 20, latestReading: null, openAlerts: 0, trend: [] })),
     { page, size: names.length, total },
   );
 }
@@ -269,4 +271,29 @@ test('a tile with open alerts is marked as in alarm', async () => {
   const alpha = (await screen.findByRole('heading', { name: 'Alpha' })).closest('article')!;
   expect(alpha).toHaveAttribute('data-alarm', 'true');
   expect(screen.getByRole('heading', { name: 'Bravo' }).closest('article')).toHaveAttribute('data-alarm', 'false');
+});
+
+// ---- Sparkline and threshold line ----
+
+test('each tile shows a sparkline of its trend; a site without readings shows none', async () => {
+  jest.mocked(dashboardApi.getDashboardSummary).mockResolvedValue(pageOf(summary));
+  jest.mocked(readingsApi.listSiteReadings).mockResolvedValue(pageOf(readings));
+  renderPage();
+
+  const alpha = (await screen.findByRole('heading', { name: 'Alpha' })).closest('article')!;
+  expect(within(alpha).getByRole('img', { name: /trend/i })).toBeInTheDocument();
+  const bravo = screen.getByRole('heading', { name: 'Bravo' }).closest('article')!;
+  expect(within(bravo).queryByRole('img', { name: /trend/i })).not.toBeInTheDocument();
+});
+
+test('the chart gets the threshold of the site it shows', async () => {
+  jest.mocked(dashboardApi.getDashboardSummary).mockResolvedValue(pageOf(summary));
+  jest.mocked(readingsApi.listSiteReadings).mockResolvedValue(pageOf(readings));
+  renderPage();
+
+  // Alpha (threshold 20) is charted first; choosing Bravo switches to its threshold (50).
+  expect(await screen.findByText('chart with 2 readings')).toHaveAttribute('data-threshold', '20');
+  await userEvent.selectOptions(screen.getByLabelText('Chart site'), '2');
+  await screen.findByText('chart with 2 readings');
+  expect(document.querySelector('[data-threshold="50"]')).toBeInTheDocument();
 });

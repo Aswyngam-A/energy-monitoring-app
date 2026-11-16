@@ -7,6 +7,7 @@ import ErrorMessage from '../components/ErrorMessage';
 import LoadingState from '../components/LoadingState';
 import Pagination from '../components/Pagination';
 import ReadingsChart from '../components/ReadingsChart';
+import Sparkline from '../components/Sparkline';
 import { usePolling } from '../hooks/usePolling';
 import { formatTimestamp } from '../utils/dates';
 
@@ -127,6 +128,8 @@ export default function DashboardPage() {
                   ) : (
                     <p className="reading muted">No readings yet</p>
                   )}
+                  {/* Peak per measurement time vs the site's limit; nothing for a site without readings. */}
+                  <Sparkline values={site.trend} threshold={site.threshold} />
                   <p className="tile-alerts">{site.openAlerts} open {site.openAlerts === 1 ? 'alert' : 'alerts'}</p>
                 </article>
               );
@@ -151,7 +154,9 @@ export default function DashboardPage() {
           </div>
           {current === null && <LoadingState label="readings" />}
           {current?.readings === null && <ErrorMessage message="Could not load readings" />}
-          {current?.readings && <ReadingsChart readings={current.readings} />}
+          {current?.readings && (
+            <ReadingsChart readings={current.readings} threshold={summary.find((s) => s.siteId === chartSiteId)?.threshold} />
+          )}
         </>
       )}
     </section>

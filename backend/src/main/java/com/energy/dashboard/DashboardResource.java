@@ -17,6 +17,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,12 +26,15 @@ import java.util.Map;
  * Read-only overview for the dashboard, served under /api/v1/dashboard.
  * Built from a fixed number of queries, however many sites exist: one page of sites (plus a COUNT
  * for the total), then the OPEN-alert counts and the latest readings of the sites on that page,
- * each in a single query. Asking "latest reading?" and "how many alerts?" once per site would be
+ * each in a single query (plus one more for the sparkline trends). Asking "latest reading?" and "how many alerts?" once per site would be
  * the N+1 problem.
  */
 @Path("/dashboard")
 @Produces(MediaType.APPLICATION_JSON)
 public class DashboardResource {
+
+    /** How many measurement times the sparkline of a tile covers. */
+    private static final int TREND_POINTS = 24;
 
     /**
      * GET /dashboard/summary?page=&size=: one page of entries, one per site, ordered by name
@@ -90,12 +94,38 @@ public class DashboardResource {
                 new LatestReading((BigDecimal) row[1], (Instant) row[2]));
         }
 
+        // Query 3: the trend. Per site and measurement time the highest value, numbered from the
+        // newest (row_number over a partition per site), keeping the TREND_POINTS newest. Plain SQL
+        // because the numbering needs a window function. Rows come oldest first within each site.
+        Map<Long, List<BigDecimal>> trends = new HashMap<>();
+        @SuppressWarnings("unchecked")
+        List<Object[]> trendRows = Reading.getEntityManager().createNativeQuery(
+                """
+                select site_id, peak from (
+                  select se.site_id as site_id, max(r.value) as peak, r.recorded_at as at,
+                         row_number() over (partition by se.site_id order by r.recorded_at desc) as rn
+                  from reading r join sensor se on se.id = r.sensor_id
+                  where se.site_id in (:ids)
+                  group by se.site_id, r.recorded_at) t
+                where rn <= :points
+                order by site_id, at
+                """)
+            .setParameter("ids", siteIds)
+            .setParameter("points", TREND_POINTS)
+            .getResultList();
+        for (Object[] row : trendRows) {
+            trends.computeIfAbsent(((Number) row[0]).longValue(), id -> new ArrayList<>())
+                .add((BigDecimal) row[1]);
+        }
+
         List<SiteSummary> items = sites.stream()
             .map(site -> new SiteSummary(
                 site.id,
                 site.name,
+                site.threshold,
                 latest.get(site.id),            // null when the site has no readings
-                openAlerts.getOrDefault(site.id, 0L)))
+                openAlerts.getOrDefault(site.id, 0L),
+                trends.getOrDefault(site.id, List.of())))
             .toList();
         return new PageResponse<>(items, paging.page(), paging.size(), total);
     }

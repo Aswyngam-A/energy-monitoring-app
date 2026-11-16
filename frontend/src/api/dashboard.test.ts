@@ -9,8 +9,8 @@ jest.mock('./client');
 test('getDashboardSummary GETs one page of site summaries and returns the whole page', async () => {
   const page = {
     items: [
-      { siteId: 1, siteName: 'A', latestReading: { value: 12.5, timestamp: '2024-05-01T10:00:00Z' }, openAlerts: 2 },
-      { siteId: 2, siteName: 'B', latestReading: null, openAlerts: 0 },
+      { siteId: 1, siteName: 'A', threshold: 20, latestReading: { value: 12.5, timestamp: '2024-05-01T10:00:00Z' }, openAlerts: 2, trend: [10, 12.5] },
+      { siteId: 2, siteName: 'B', threshold: 50, latestReading: null, openAlerts: 0, trend: [] },
     ],
     page: 1, size: 20, total: 22,
   };

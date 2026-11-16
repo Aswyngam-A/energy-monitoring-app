@@ -48,3 +48,18 @@ test('is wrapped in a responsive container that fills the available width', () =
   // With a measured size the chart is drawn inside it.
   expect(document.querySelector('svg.recharts-surface')).toBeInTheDocument();
 });
+
+// ---- Threshold line ----
+
+test('draws a labelled threshold line when a threshold is given', () => {
+  render(<ReadingsChart threshold={100} readings={[reading(1, 10, '2024-05-01T10:00:00Z')]} />);
+
+  expect(document.querySelector('.recharts-reference-line')).toBeInTheDocument();
+  expect(screen.getByText('Threshold 100 kW')).toBeInTheDocument();
+});
+
+test('draws no threshold line without a threshold', () => {
+  render(<ReadingsChart readings={[reading(1, 10, '2024-05-01T10:00:00Z')]} />);
+
+  expect(document.querySelector('.recharts-reference-line')).not.toBeInTheDocument();
+});

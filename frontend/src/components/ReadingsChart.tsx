@@ -1,4 +1,4 @@
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { Reading } from '../api/readings';
 import { formatTimestamp } from '../utils/dates';
 
@@ -10,7 +10,7 @@ const TOOLTIP_STYLE = {
 };
 
 /**
- * Line chart of readings over time (Recharts). Pass the readings as the API returns them, newest
+ * Line chart of readings over time (Recharts), with the site's threshold as a dashed red line when given. Pass the readings as the API returns them, newest
  * first: the chart reverses them so time runs from left to right. Times are UTC, like everywhere
  * else in the UI.
  *
@@ -18,7 +18,7 @@ const TOOLTIP_STYLE = {
  * chart when the parent is resized. jsdom (the test environment) has no layout, so it measures 0
  * and draws nothing: the tests fake the measured size (see ReadingsChart.test.tsx).
  */
-export default function ReadingsChart({ readings }: { readings: Reading[] }) {
+export default function ReadingsChart({ readings, threshold }: { readings: Reading[]; threshold?: number }) {
   if (readings.length === 0) return <p className="muted">No readings to chart</p>;
 
   // Oldest first, with the label the X axis and the tooltip show.
@@ -36,7 +36,13 @@ export default function ReadingsChart({ readings }: { readings: Reading[] }) {
               Horizontal hairlines only: the ledger look has no boxed grid. */}
           <CartesianGrid vertical={false} stroke="var(--rule)" />
           <XAxis dataKey="time" tick={AXIS_TICK} stroke="var(--rule-strong)" tickLine={false} />
-          <YAxis unit=" kW" width={70} tick={AXIS_TICK} stroke="var(--rule-strong)" tickLine={false} />
+          {/* With a threshold the axis must always reach it, or the line would be off the chart. */}
+          <YAxis unit=" kW" width={70} tick={AXIS_TICK} stroke="var(--rule-strong)" tickLine={false}
+            domain={threshold === undefined ? ['auto', 'auto'] : [0, (max: number) => Math.ceil(Math.max(max, threshold) * 1.1)]} />
+          {threshold !== undefined && (
+            <ReferenceLine y={threshold} stroke="var(--danger)" strokeDasharray="4 3" ifOverflow="extendDomain"
+              label={{ value: `Threshold ${threshold} kW`, position: 'insideTopRight', fill: 'var(--danger)', fontSize: 11, fontFamily: 'var(--mono)' }} />
+          )}
           <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: 'var(--muted)' }} cursor={{ stroke: 'var(--rule-strong)' }} />
           <Line type="linear" dataKey="value" name="Value (kW)" stroke="var(--accent)" strokeWidth={1.5} dot={data.length < 30 ? { r: 2, fill: 'var(--accent)', strokeWidth: 0 } : false} isAnimationActive={false} />
         </LineChart>

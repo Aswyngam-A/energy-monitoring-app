@@ -265,4 +265,57 @@ class DashboardResourceTest {
         getPage(null, "101").statusCode(400);
         getPage(null, "abc").statusCode(400);
     }
+
+    // ---- sparkline + threshold (UI design follow-up) ----
+
+    @Test
+    void eachEntryCarriesItsSitesThreshold() {
+        insertSite("A"); // insertSite gives every site the threshold 100.00
+
+        get().statusCode(200).body("items[0].threshold", is(100.0f));
+    }
+
+    @Test
+    void trendIsThePeakPerMeasurementTimeOldestFirst() {
+        Long siteId = insertSite("A");
+        Long meter = insertSensor(siteId, "Meter");
+        Long pump = insertSensor(siteId, "Pump");
+        // Two sensors measured at the same instants: the trend keeps the higher value of each instant
+        // (the one the threshold is about). Inserted out of order on purpose.
+        insertReading(meter, "20", "2024-05-01T11:00:00Z");
+        insertReading(pump, "35", "2024-05-01T11:00:00Z");
+        insertReading(meter, "10", "2024-05-01T10:00:00Z");
+        insertReading(pump, "5", "2024-05-01T10:00:00Z");
+        insertReading(meter, "40", "2024-05-01T12:00:00Z");
+
+        get().statusCode(200).body("items[0].trend", contains(10f, 35f, 40f));
+    }
+
+    @Test
+    void trendHoldsOnlyTheLatest24MeasurementTimes() {
+        Long siteId = insertSite("A");
+        Long meter = insertSensor(siteId, "Meter");
+        // 30 readings, value = hour number 0..29, one per hour.
+        for (int hour = 0; hour < 30; hour++) {
+            insertReading(meter, String.valueOf(hour),
+                Instant.parse("2024-05-01T00:00:00Z").plusSeconds(3600L * hour).toString());
+        }
+
+        get().statusCode(200)
+            .body("items[0].trend.size()", is(24))
+            .body("items[0].trend[0]", is(6f))    // the 24 newest are 6..29, oldest first
+            .body("items[0].trend[23]", is(29f));
+    }
+
+    @Test
+    void trendIsEmptyWithoutReadingsAndNeverMixesInOtherSites() {
+        Long quiet = insertSite("A quiet");
+        Long busy = insertSite("B busy");
+        insertReading(insertSensor(busy, "Meter"), "50", "2024-05-01T10:00:00Z");
+
+        get().statusCode(200)
+            .body("items[0].siteId", is(quiet.intValue()))
+            .body("items[0].trend.size()", is(0))
+            .body("items[1].trend", contains(50f));
+    }
 }
