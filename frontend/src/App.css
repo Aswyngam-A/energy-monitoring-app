@@ -34,7 +34,9 @@
 .icon { flex: none; }
 .menu-button { display: none; }
 
-.content { padding: var(--s6) var(--s6) var(--s7); max-width: var(--content-max); width: 100%; }
+/* Capped for readability on very wide screens and centred in the space beside the rail, so the
+   spare room is split on both sides instead of piling up on the right. */
+.content { padding: var(--s6) var(--s6) var(--s7); max-width: var(--content-max); width: 100%; margin-inline: auto; }
 
 .visually-hidden {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
