@@ -21,13 +21,23 @@ export interface Alert {
   status: AlertStatus;
 }
 
+// The backend returns lists as a page: { items, page, size, total } (decided in M7).
+interface AlertPage {
+  items: Alert[];
+  page: number;
+  size: number;
+  total: number;
+}
+
 // GET /alerts or GET /alerts?siteId= -> alerts newest first. Without a siteId every site is included.
+// TEMPORARY (until M7 step 5 adds pagination controls): asks for the largest page the backend
+// allows (100) and returns only its items, so the page and the nav badge keep working.
 export async function listAlerts(siteId?: number): Promise<Alert[]> {
   // Only send siteId when there is one; the backend treats a missing parameter as "no filter".
-  const params: { siteId?: number } = {};
+  const params: { siteId?: number; size: number } = { size: 100 };
   if (siteId !== undefined) params.siteId = siteId;
-  const response = await client.get<Alert[]>('/alerts', { params });
-  return response.data;
+  const response = await client.get<AlertPage>('/alerts', { params });
+  return response.data.items;
 }
 
 // PATCH /alerts/{id} -> the updated alert. The backend answers 400 for a move that is not allowed

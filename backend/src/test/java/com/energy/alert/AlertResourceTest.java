@@ -99,7 +99,7 @@ class AlertResourceTest {
         get(null)
             .statusCode(200)
             // Newest first by creation time, across sites: 12:00, 11:00, 10:00.
-            .body("value", contains(120f, 130f, 110f));
+            .body("items.value", contains(120f, 130f, 110f));
     }
 
     @Test
@@ -109,15 +109,15 @@ class AlertResourceTest {
 
         get(null)
             .statusCode(200)
-            .body("size()", is(1))
-            .body("[0].id", is(alertId.intValue()))
-            .body("[0].siteId", is(ids.siteId().intValue()))
-            .body("[0].sensorId", is(ids.sensorId().intValue()))
-            .body("[0].readingId", notNullValue())
-            .body("[0].value", is(150.5f))
-            .body("[0].threshold", is(100.0f))
-            .body("[0].createdAt", is("2024-05-01T10:00:00Z"))
-            .body("[0].status", is("OPEN"));
+            .body("items.size()", is(1))
+            .body("items[0].id", is(alertId.intValue()))
+            .body("items[0].siteId", is(ids.siteId().intValue()))
+            .body("items[0].sensorId", is(ids.sensorId().intValue()))
+            .body("items[0].readingId", notNullValue())
+            .body("items[0].value", is(150.5f))
+            .body("items[0].threshold", is(100.0f))
+            .body("items[0].createdAt", is("2024-05-01T10:00:00Z"))
+            .body("items[0].status", is("OPEN"));
     }
 
     @Test
@@ -130,14 +130,14 @@ class AlertResourceTest {
 
         get(String.valueOf(a.siteId()))
             .statusCode(200)
-            .body("value", contains(130f, 110f));
+            .body("items.value", contains(130f, 110f));
     }
 
     @Test
     void noAlertsReturnsAnEmptyArray() {
         get(null)
             .statusCode(200)
-            .body("size()", is(0));
+            .body("items.size()", is(0));
     }
 
     @Test
@@ -146,7 +146,7 @@ class AlertResourceTest {
 
         get(String.valueOf(ids.siteId()))
             .statusCode(200)
-            .body("size()", is(0));
+            .body("items.size()", is(0));
     }
 
     @Test
@@ -179,9 +179,9 @@ class AlertResourceTest {
         insertAlert(ids, "120", "2024-05-01T11:00:00Z", AlertStatus.ACKNOWLEDGED);
         insertAlert(ids, "130", "2024-05-01T12:00:00Z", AlertStatus.RESOLVED);
 
-        getByStatus(null, "ACKNOWLEDGED").statusCode(200).body("value", contains(120f));
-        getByStatus(null, "OPEN").statusCode(200).body("value", contains(110f));
-        getByStatus(null, "RESOLVED").statusCode(200).body("value", contains(130f));
+        getByStatus(null, "ACKNOWLEDGED").statusCode(200).body("items.value", contains(120f));
+        getByStatus(null, "OPEN").statusCode(200).body("items.value", contains(110f));
+        getByStatus(null, "RESOLVED").statusCode(200).body("items.value", contains(130f));
     }
 
     @Test
@@ -193,7 +193,7 @@ class AlertResourceTest {
         insertAlert(b, "130", "2024-05-01T12:00:00Z", AlertStatus.OPEN);
 
         // Only site A's OPEN alert: both filters apply.
-        getByStatus(String.valueOf(a.siteId()), "OPEN").statusCode(200).body("value", contains(110f));
+        getByStatus(String.valueOf(a.siteId()), "OPEN").statusCode(200).body("items.value", contains(110f));
     }
 
     @Test
@@ -201,7 +201,7 @@ class AlertResourceTest {
         Ids ids = insertSiteWithSensor("A");
         insertAlert(ids, "110", "2024-05-01T10:00:00Z", AlertStatus.OPEN);
 
-        getByStatus(null, "RESOLVED").statusCode(200).body("size()", is(0));
+        getByStatus(null, "RESOLVED").statusCode(200).body("items.size()", is(0));
     }
 
     @Test
@@ -210,14 +210,99 @@ class AlertResourceTest {
         insertAlert(ids, "110", "2024-05-01T10:00:00Z", AlertStatus.OPEN);
         insertAlert(ids, "120", "2024-05-01T11:00:00Z", AlertStatus.RESOLVED);
 
-        getByStatus(null, null).statusCode(200).body("size()", is(2));
+        getByStatus(null, null).statusCode(200).body("items.size()", is(2));
         // A blank value counts as "not given", like a blank siteId.
-        getByStatus(null, "").statusCode(200).body("size()", is(2));
+        getByStatus(null, "").statusCode(200).body("items.size()", is(2));
     }
 
     @Test
     void unknownStatusReturns400() {
         getByStatus(null, "EXPLODED").statusCode(400).body("status", is(400));
+    }
+
+    // ---- pagination (M7) ----
+
+    /** Inserts n alerts, one minute apart, oldest first; the value of alert i is 100 + i. */
+    private void insertManyAlerts(Ids ids, int n) {
+        Instant start = Instant.parse("2024-05-01T10:00:00Z");
+        for (int i = 1; i <= n; i++) {
+            insertAlert(ids, String.valueOf(100 + i), start.plusSeconds(60L * i).toString());
+        }
+    }
+
+    private ValidatableResponse getPage(String page, String size) {
+        var request = given();
+        if (page != null) request = request.queryParam("page", page);
+        if (size != null) request = request.queryParam("size", size);
+        return request.when().get(PATH).then();
+    }
+
+    @Test
+    void responseIsAPageWithItsMetadata() {
+        Ids ids = insertSiteWithSensor("A");
+        insertManyAlerts(ids, 3);
+
+        getPage(null, null)
+            .statusCode(200)
+            .body("items.size()", is(3))
+            .body("page", is(0))
+            .body("size", is(20))
+            .body("total", is(3));
+    }
+
+    @Test
+    void sizeLimitsTheItemsButTotalCountsEverything() {
+        Ids ids = insertSiteWithSensor("A");
+        insertManyAlerts(ids, 5);
+
+        getPage("0", "2")
+            .statusCode(200)
+            // Newest first: alerts 5 and 4.
+            .body("items.value", contains(105f, 104f))
+            .body("size", is(2))
+            .body("total", is(5));
+    }
+
+    @Test
+    void pageSelectsTheSliceInTheSameOrder() {
+        Ids ids = insertSiteWithSensor("A");
+        insertManyAlerts(ids, 5);
+
+        getPage("1", "2").body("items.value", contains(103f, 102f)).body("page", is(1));
+        getPage("2", "2").body("items.value", contains(101f));
+    }
+
+    @Test
+    void pageBeyondTheEndIsEmptyButKeepsTheTotal() {
+        Ids ids = insertSiteWithSensor("A");
+        insertManyAlerts(ids, 3);
+
+        getPage("5", "2")
+            .statusCode(200)
+            .body("items.size()", is(0))
+            .body("total", is(3));
+    }
+
+    @Test
+    void totalFollowsTheFilters() {
+        Ids a = insertSiteWithSensor("A");
+        Ids b = insertSiteWithSensor("B");
+        insertManyAlerts(a, 3);
+        insertManyAlerts(b, 2);
+
+        given().queryParam("siteId", a.siteId()).queryParam("size", 1)
+            .when().get(PATH).then()
+            .statusCode(200)
+            .body("items.size()", is(1))
+            .body("total", is(3));
+    }
+
+    @Test
+    void badPageOrSizeReturns400() {
+        getPage("-1", null).statusCode(400);
+        getPage("abc", null).statusCode(400);
+        getPage(null, "0").statusCode(400);
+        getPage(null, "101").statusCode(400).body("status", is(400));
     }
 
     // ---- PATCH /alerts/{id} ----
@@ -233,7 +318,7 @@ class AlertResourceTest {
     /** Reads the status back through the API (the source of truth for the client). */
     private String statusOf(Long alertId) {
         return given().when().get(PATH).then().extract()
-            .path("find { it.id == " + alertId + " }.status");
+            .path("items.find { it.id == " + alertId + " }.status");
     }
 
     @Test

@@ -1,6 +1,10 @@
 package com.energy.alert;
 
+import com.energy.common.PageParams;
+import com.energy.common.PageResponse;
 import com.energy.site.Site;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -30,19 +34,22 @@ import java.util.Map;
 public class AlertResource {
 
     /**
-     * GET /alerts?siteId=&status=: every alert, newest first, optionally narrowed to one site
-     * and/or one status; the filters combine (both must match).
+     * GET /alerts?siteId=&status=&page=&size=: alerts newest first, one page at a time (see
+     * PageParams), optionally narrowed to one site and/or one status; the filters combine.
      * 404 if the site does not exist (so "unknown site" is not confused with "site without alerts",
      * which is an empty list); 400 for a malformed siteId or an unknown status.
      */
     @GET
-    public List<AlertResponse> list(@QueryParam("siteId") String siteIdText,
-                                    @QueryParam("status") String statusText) {
+    public PageResponse<AlertResponse> list(@QueryParam("siteId") String siteIdText,
+                                            @QueryParam("status") String statusText,
+                                            @QueryParam("page") String pageText,
+                                            @QueryParam("size") String sizeText) {
         // Read as text and parse here: if siteId were declared as Long, a value like "abc" would
         // make JAX-RS answer 404 (its rule for failed query-parameter conversion), but a
         // malformed input is the client's mistake, so it must be a 400. Same for the status.
         Long siteId = parseSiteId(siteIdText);
         AlertStatus status = parseStatus(statusText);
+        PageParams paging = PageParams.parse(pageText, sizeText);
 
         if (siteId != null && Site.findById(siteId) == null) {
             throw new NotFoundException("Site " + siteId + " not found");
@@ -65,11 +72,15 @@ public class AlertResource {
             params.put("status", status);
         }
 
-        List<Alert> alerts = conditions.isEmpty()
-            ? Alert.listAll(newestFirst)
-            : Alert.list(String.join(" and ", conditions), newestFirst, params);
+        PanacheQuery<Alert> query = conditions.isEmpty()
+            ? Alert.findAll(newestFirst)
+            : Alert.find(String.join(" and ", conditions), newestFirst, params);
 
-        return alerts.stream().map(AlertResponse::from).toList();
+        // One query for the requested slice (LIMIT/OFFSET) and one COUNT for the total of all
+        // matching rows, which is what lets a client know how many pages exist.
+        List<AlertResponse> items = query.page(Page.of(paging.page(), paging.size()))
+            .list().stream().map(AlertResponse::from).toList();
+        return new PageResponse<>(items, paging.page(), paging.size(), query.count());
     }
 
     /**

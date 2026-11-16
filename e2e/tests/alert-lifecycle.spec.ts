@@ -94,8 +94,9 @@ test('a sensor that keeps breaching gets one alert, and a new one after the firs
 test('the API refuses to reopen a resolved alert', async ({ request }) => {
   const { siteId, sensorId } = await createSiteWithSensor(request);
   await postJson(request, `/api/v1/sensors/${sensorId}/readings`, { value: 150 });
+  // The list is a page ({ items, page, size, total }); this site has a single alert.
   const alerts = await (await request.get(`/api/v1/alerts?siteId=${siteId}`)).json();
-  const alertId = alerts[0].id;
+  const alertId = alerts.items[0].id;
 
   const resolved = await request.patch(`/api/v1/alerts/${alertId}`, { data: { status: 'RESOLVED' } });
   expect(resolved.status()).toBe(200);

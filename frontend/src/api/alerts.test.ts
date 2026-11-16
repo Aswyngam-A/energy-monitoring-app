@@ -16,17 +16,21 @@ const alert = {
   status: 'OPEN',
 };
 
-test('listAlerts GETs /alerts without query parameters when no site is given', async () => {
-  jest.mocked(client.get).mockResolvedValue({ data: [alert] });
+// The backend now answers with a page: { items, page, size, total } (M7). Until the pagination
+// controls exist (M7 step 5) the client asks for the largest page (100) and returns its items.
+const page = (items: object[]) => ({ items, page: 0, size: 100, total: items.length });
+
+test('listAlerts GETs /alerts asking for the largest page and returns its items', async () => {
+  jest.mocked(client.get).mockResolvedValue({ data: page([alert]) });
   const result = await listAlerts();
-  expect(client.get).toHaveBeenCalledWith('/alerts', { params: {} });
+  expect(client.get).toHaveBeenCalledWith('/alerts', { params: { size: 100 } });
   expect(result).toEqual([alert]);
 });
 
 test('listAlerts sends siteId as a query parameter to keep one site', async () => {
-  jest.mocked(client.get).mockResolvedValue({ data: [] });
+  jest.mocked(client.get).mockResolvedValue({ data: page([]) });
   await listAlerts(7);
-  expect(client.get).toHaveBeenCalledWith('/alerts', { params: { siteId: 7 } });
+  expect(client.get).toHaveBeenCalledWith('/alerts', { params: { siteId: 7, size: 100 } });
 });
 
 test('updateAlertStatus PATCHes the status to /alerts/{id} and returns the updated alert', async () => {
