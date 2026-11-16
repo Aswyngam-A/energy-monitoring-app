@@ -80,3 +80,42 @@ button.danger { color: var(--danger); border-color: var(--danger); }
 
 .pagination { display: flex; align-items: center; gap: var(--s4); margin-top: var(--s4); }
 .pagination span { color: var(--muted); font-size: 13px; }
+
+/* ============ Pages: common ============ */
+.page { display: grid; gap: var(--s5); }
+.page > h2 { padding-bottom: var(--s3); border-bottom: 1px solid var(--rule); }
+.muted { color: var(--muted); }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s4); flex-wrap: wrap; }
+.field-inline { display: inline-flex; align-items: center; gap: var(--s2); color: var(--muted); font-size: 13px; }
+
+/* ============ Shared: form controls ============ */
+input, select {
+  min-height: 30px; padding: 0 var(--s2); background: var(--surface);
+  border: 1px solid var(--rule-strong); border-radius: var(--radius);
+  transition: border-color var(--motion);
+}
+input:hover, select:hover { border-color: var(--ink); }
+input[aria-invalid='true'] { border-color: var(--danger); }
+
+/* ============ Dashboard ============ */
+/* Ledger tiles: one hairline grid, cells share their borders instead of floating as cards. */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
+.tile {
+  display: grid; gap: var(--s2); align-content: start; padding: var(--s4);
+  border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); background: var(--surface);
+  border-top: 2px solid transparent; margin-top: -1px; /* room for the alarm rule without shifting the grid */
+}
+.tile h3 { font-size: 14px; font-weight: 500; }
+.tile h3 a { color: var(--ink); text-decoration: none; }
+.tile h3 a:hover { color: var(--accent); text-decoration: underline; }
+.reading { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2); flex-wrap: wrap; }
+.value { font-size: 26px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.1; }
+.tile-alerts { color: var(--muted); font-size: 13px; }
+/* In alarm: an amber rule on top and amber text. Not colour alone: the count is also spelled out. */
+.tile[data-alarm='true'] { border-top-color: var(--open); }
+.tile[data-alarm='true'] .tile-alerts { color: var(--open); font-weight: 500; }
+/* A value that moved in the latest refresh flashes once (see DashboardPage, `changed`). */
+.tile[data-changed='true'] .value { animation: flash 1.6s ease-out; }
+@keyframes flash { from { background: var(--highlight); } to { background: transparent; } }
+
+.chart { padding: var(--s3) 0 0; border-top: 1px solid var(--rule); }

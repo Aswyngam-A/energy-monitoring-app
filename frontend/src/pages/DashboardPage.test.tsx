@@ -235,3 +235,38 @@ test('a refresh tick reloads the page the user is on, not the first one', async 
     jest.useRealTimers();
   }
 });
+
+// ---- UI design pass: highlight what changed ----
+
+test('a tile whose numbers changed in a refresh is marked as changed; unchanged tiles are not', async () => {
+  jest.useFakeTimers();
+  try {
+    jest.mocked(dashboardApi.getDashboardSummary)
+      .mockResolvedValueOnce(pageOf(summary))
+      .mockResolvedValueOnce(pageOf([{ ...summary[0], openAlerts: 5 }, summary[1]]));
+    jest.mocked(readingsApi.listSiteReadings).mockResolvedValue(pageOf(readings));
+    renderPage();
+    await screen.findByText('2 open alerts');
+    // The first load is not a "change": nothing is marked.
+    expect(document.querySelectorAll('[data-changed="true"]')).toHaveLength(0);
+
+    await act(async () => { jest.advanceTimersByTime(30_000); });
+
+    const alpha = screen.getByRole('heading', { name: 'Alpha' }).closest('article')!;
+    const bravo = screen.getByRole('heading', { name: 'Bravo' }).closest('article')!;
+    expect(alpha).toHaveAttribute('data-changed', 'true');
+    expect(bravo).not.toHaveAttribute('data-changed', 'true');
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+test('a tile with open alerts is marked as in alarm', async () => {
+  jest.mocked(dashboardApi.getDashboardSummary).mockResolvedValue(pageOf(summary));
+  jest.mocked(readingsApi.listSiteReadings).mockResolvedValue(pageOf(readings));
+  renderPage();
+
+  const alpha = (await screen.findByRole('heading', { name: 'Alpha' })).closest('article')!;
+  expect(alpha).toHaveAttribute('data-alarm', 'true');
+  expect(screen.getByRole('heading', { name: 'Bravo' }).closest('article')).toHaveAttribute('data-alarm', 'false');
+});

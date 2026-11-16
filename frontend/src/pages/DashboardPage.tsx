@@ -41,13 +41,34 @@ export default function DashboardPage() {
   // True once the summary has been loaded successfully at least once.
   const hasSummary = useRef(false);
 
+  // "What moved since the last refresh": for each site on screen, a fingerprint of the numbers
+  // shown on its tile. A refresh whose fingerprint differs marks that tile as changed (it flashes
+  // briefly), so an operator notices which site moved. `version` restarts the flash animation.
+  const lastSeen = useRef(new Map<number, string>());
+  const [changed, setChanged] = useState<{ ids: number[]; version: number }>({ ids: [], version: 0 });
+
   // The summary is loaded when the page first appears, when the user changes page, and again on
   // every refresh tick (always the page the user is on).
   useEffect(() => {
     // An answer for a page the user has already left must be ignored.
     let cancelled = false;
     getDashboardSummary(page)
-      .then((data) => { if (!cancelled) { hasSummary.current = true; setResult(data); setError(''); } })
+      .then((data) => {
+        if (cancelled) return;
+        // Compare with what this page showed last time. The first time a site is seen there is
+        // nothing to compare with, so it is not "changed". Only the current page is remembered.
+        const seen = new Map<number, string>();
+        const ids: number[] = [];
+        for (const site of data.items) {
+          const print = `${site.latestReading?.value ?? ''}|${site.latestReading?.timestamp ?? ''}|${site.openAlerts}`;
+          seen.set(site.siteId, print);
+          const before = lastSeen.current.get(site.siteId);
+          if (before !== undefined && before !== print) ids.push(site.siteId);
+        }
+        lastSeen.current = seen;
+        setChanged((prev) => ({ ids, version: prev.version + 1 }));
+        hasSummary.current = true; setResult(data); setError('');
+      })
       // A failed refresh keeps the data already on screen; only a failed FIRST load is an error.
       .catch(() => { if (!cancelled && !hasSummary.current) setError('Could not load the dashboard'); })
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -83,41 +104,51 @@ export default function DashboardPage() {
   const current = chartResult?.siteId === chartSiteId ? chartResult : null;
 
   return (
-    <section>
+    <section className="page">
       <h2>Dashboard</h2>
       {summary.length === 0 ? (
         <p>No sites yet</p>
       ) : (
         <>
-          {summary.map((site) => (
-            <article key={site.siteId}>
-              <h3><Link to={`/sites/${site.siteId}`}>{site.siteName}</Link></h3>
-              {site.latestReading ? (
-                <p>
-                  <strong>{site.latestReading.value} kW</strong>{' '}
-                  <small>{formatTimestamp(site.latestReading.timestamp)} UTC</small>
-                </p>
-              ) : (
-                <p>No readings yet</p>
-              )}
-              <p>{site.openAlerts} open {site.openAlerts === 1 ? 'alert' : 'alerts'}</p>
-            </article>
-          ))}
+          <div className="tiles">
+            {summary.map((site) => {
+              const isChanged = changed.ids.includes(site.siteId);
+              return (
+                <article key={site.siteId} className="tile" data-alarm={site.openAlerts > 0} data-changed={isChanged}>
+                  <h3><Link to={`/sites/${site.siteId}`}>{site.siteName}</Link></h3>
+                  {site.latestReading ? (
+                    <p className="reading">
+                      {/* New key on a change = new element = the highlight animation plays again. */}
+                      <strong key={isChanged ? changed.version : 'static'} className="mono value">
+                        {site.latestReading.value} kW
+                      </strong>{' '}
+                      <small className="mono">{formatTimestamp(site.latestReading.timestamp)} UTC</small>
+                    </p>
+                  ) : (
+                    <p className="reading muted">No readings yet</p>
+                  )}
+                  <p className="tile-alerts">{site.openAlerts} open {site.openAlerts === 1 ? 'alert' : 'alerts'}</p>
+                </article>
+              );
+            })}
+          </div>
 
           <Pagination page={page} size={result?.size ?? 1} total={result?.total ?? 0} onPageChange={setPage} />
 
-          <h3>Latest readings</h3>
-          <label>
-            Chart site{' '}
-            <select
-              value={chartSiteId}
-              onChange={(e) => { setPickedSiteId(Number(e.target.value)); }}
-            >
-              {summary.map((site) => (
-                <option key={site.siteId} value={site.siteId}>{site.siteName}</option>
-              ))}
-            </select>
-          </label>
+          <div className="section-head">
+            <h3>Latest readings</h3>
+            <label className="field-inline">
+              Chart site{' '}
+              <select
+                value={chartSiteId}
+                onChange={(e) => { setPickedSiteId(Number(e.target.value)); }}
+              >
+                {summary.map((site) => (
+                  <option key={site.siteId} value={site.siteId}>{site.siteName}</option>
+                ))}
+              </select>
+            </label>
+          </div>
           {current === null && <LoadingState label="readings" />}
           {current?.readings === null && <ErrorMessage message="Could not load readings" />}
           {current?.readings && <ReadingsChart readings={current.readings} />}
