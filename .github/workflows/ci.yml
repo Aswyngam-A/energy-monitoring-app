@@ -1,6 +1,6 @@
 # Runs on every push to main and on every pull request; the three jobs run in parallel.
 # Actions are pinned to a major version (checkout v7, setup-node v7, setup-java v6: the Node 24 based
-# releases; v4 ran on the deprecated Node 20). `ubuntu-latest` currently means Ubuntu 26.04.
+# releases; v4 ran on the deprecated Node 20). the runner is pinned to ubuntu-26.04 (what ubuntu-latest became in Oct 2026) so an image change never surprises a build.
 name: CI
 
 on:
@@ -9,10 +9,10 @@ on:
   pull_request:
 
 jobs:
-  # Backend: compile, unit tests and integration tests. Docker is preinstalled on ubuntu-latest,
+  # Backend: compile, unit tests and integration tests. Docker is preinstalled on the Ubuntu runner,
   # which Quarkus Dev Services needs to start PostgreSQL.
   backend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v6
@@ -25,7 +25,7 @@ jobs:
 
   # Frontend: lint + typecheck + Jest (npm run check). `npm ci` installs exactly what the lockfile says.
   frontend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -40,7 +40,7 @@ jobs:
 
   # End-to-end: start the whole stack with docker compose, then drive it with Playwright in a real browser.
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
