@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { openDashboardAtSite } from './dashboard-helpers';
 
 // The whole product in one journey (the M7 "happy path"): a user creates a site and registers a
 // sensor in the browser, a reading above the threshold arrives, and the user sees the alert on
@@ -38,8 +39,7 @@ test('create site, register sensor, receive an over-threshold reading, see the a
   await expect(page.getByRole('row').filter({ hasText: 'Journey meter' })).toContainText('130.5');
 
   // 5. The dashboard shows the latest reading and one open alert for the site.
-  await page.goto('/dashboard');
-  const card = page.getByRole('article').filter({ has: page.getByRole('heading', { name: siteName }) });
+  const card = await openDashboardAtSite(page, siteName);
   await expect(card).toContainText('130.5 kW');
   await expect(card).toContainText('1 open alert');
 
@@ -55,6 +55,8 @@ test('create site, register sensor, receive an over-threshold reading, see the a
   await expect(row).toContainText('ACKNOWLEDGED');
 
   // 8. Back on the dashboard the site has no open alert any more (acknowledged ones do not count).
+  // The dashboard is paginated and opens on page 1, so the helper pages forward to the site again.
   await page.getByRole('link', { name: 'Dashboard' }).click();
-  await expect(card).toContainText('0 open alerts');
+  const cardAgain = await openDashboardAtSite(page, siteName);
+  await expect(cardAgain).toContainText('0 open alerts');
 });

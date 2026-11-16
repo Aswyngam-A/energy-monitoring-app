@@ -1,18 +1,31 @@
-// Unit tests for the dashboard API client (Axios mocked: only URL and returned data are checked).
+// Unit tests for the dashboard API client (Axios mocked: only URL, params and returned data are checked).
 import client from './client';
 import { getDashboardSummary } from './dashboard';
 
 jest.mock('./client');
 
-test('getDashboardSummary GETs /dashboard/summary and returns the list of site summaries', async () => {
-  const summary = [
-    { siteId: 1, siteName: 'A', latestReading: { value: 12.5, timestamp: '2024-05-01T10:00:00Z' }, openAlerts: 2 },
-    { siteId: 2, siteName: 'B', latestReading: null, openAlerts: 0 },
-  ];
-  jest.mocked(client.get).mockResolvedValue({ data: summary });
+// Replaces the pre-pagination test (plain array): since polish item 4 the endpoint answers with a
+// page { items, page, size, total } like the other lists.
+test('getDashboardSummary GETs one page of site summaries and returns the whole page', async () => {
+  const page = {
+    items: [
+      { siteId: 1, siteName: 'A', latestReading: { value: 12.5, timestamp: '2024-05-01T10:00:00Z' }, openAlerts: 2 },
+      { siteId: 2, siteName: 'B', latestReading: null, openAlerts: 0 },
+    ],
+    page: 1, size: 20, total: 22,
+  };
+  jest.mocked(client.get).mockResolvedValue({ data: page });
 
-  const result = await getDashboardSummary();
+  const result = await getDashboardSummary(1);
 
-  expect(client.get).toHaveBeenCalledWith('/dashboard/summary');
-  expect(result).toEqual(summary);
+  expect(client.get).toHaveBeenCalledWith('/dashboard/summary', { params: { page: 1 } });
+  expect(result).toEqual(page);
+});
+
+test('getDashboardSummary asks for the first page by default', async () => {
+  jest.mocked(client.get).mockResolvedValue({ data: { items: [], page: 0, size: 20, total: 0 } });
+
+  await getDashboardSummary();
+
+  expect(client.get).toHaveBeenCalledWith('/dashboard/summary', { params: { page: 0 } });
 });

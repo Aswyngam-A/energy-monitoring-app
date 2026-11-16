@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { getDashboardSummary, type SiteSummary } from '../api/dashboard';
+import type { Page } from '../api/page';
 import { listSiteReadings, type Reading } from '../api/readings';
 import ErrorMessage from '../components/ErrorMessage';
 import LoadingState from '../components/LoadingState';
+import Pagination from '../components/Pagination';
 import ReadingsChart from '../components/ReadingsChart';
 import { usePolling } from '../hooks/usePolling';
 import { formatTimestamp } from '../utils/dates';
@@ -15,13 +17,18 @@ interface ChartResult {
 }
 
 /**
- * Page at /dashboard: one card per site (latest reading and number of open alerts) and a chart of
- * the latest readings of one site, chosen with a select (the first site at first).
+ * Page at /dashboard: one card per site (latest reading and number of open alerts), one page of
+ * sites at a time, and a chart of the latest readings of one site, chosen with a select. The
+ * select lists the sites of the page shown (the first one at first); when the user moves to a
+ * page that does not contain the picked site, the chart goes back to that page's first site.
  */
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
-  const [summary, setSummary] = useState<SiteSummary[]>([]);
+  // The page of sites asked for (0-based) and the last page received (null until the first load).
+  const [page, setPage] = useState(0);
+  const [result, setResult] = useState<Page<SiteSummary> | null>(null);
   const [error, setError] = useState('');
+  const summary = result?.items ?? [];
 
   // The site the user picked for the chart; null = "none picked yet", which means the first site.
   const [pickedSiteId, setPickedSiteId] = useState<number | null>(null);
@@ -34,17 +41,23 @@ export default function DashboardPage() {
   // True once the summary has been loaded successfully at least once.
   const hasSummary = useRef(false);
 
-  // The summary is loaded when the page first appears and again on every refresh tick.
+  // The summary is loaded when the page first appears, when the user changes page, and again on
+  // every refresh tick (always the page the user is on).
   useEffect(() => {
-    getDashboardSummary()
-      .then((data) => { hasSummary.current = true; setSummary(data); setError(''); })
+    // An answer for a page the user has already left must be ignored.
+    let cancelled = false;
+    getDashboardSummary(page)
+      .then((data) => { if (!cancelled) { hasSummary.current = true; setResult(data); setError(''); } })
       // A failed refresh keeps the data already on screen; only a failed FIRST load is an error.
-      .catch(() => { if (!hasSummary.current) setError('Could not load the dashboard'); })
-      .finally(() => { setLoading(false); });
-  }, [reloads]);
+      .catch(() => { if (!cancelled && !hasSummary.current) setError('Could not load the dashboard'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [page, reloads]);
 
-  // Derived, not stored: which site the chart shows right now.
-  const chartSiteId = pickedSiteId ?? summary[0]?.siteId;
+  // Derived, not stored: which site the chart shows right now. The picked site only counts while
+  // it is on the page shown; otherwise the page's first site is used.
+  const pickedIsShown = summary.some((site) => site.siteId === pickedSiteId);
+  const chartSiteId = pickedIsShown ? pickedSiteId! : summary[0]?.siteId;
 
   // Load the chart's readings whenever the chart's site changes or a refresh tick happens
   // (page 0 = the newest readings).
@@ -90,6 +103,8 @@ export default function DashboardPage() {
               <p>{site.openAlerts} open {site.openAlerts === 1 ? 'alert' : 'alerts'}</p>
             </article>
           ))}
+
+          <Pagination page={page} size={result?.size ?? 1} total={result?.total ?? 0} onPageChange={setPage} />
 
           <h3>Latest readings</h3>
           <label>

@@ -45,7 +45,7 @@ expect(await screen.findByRole('heading', { name: 'Alerts' })).toBeInTheDocument
 });
 
 test('the /dashboard route shows the dashboard page', async () => {
-  jest.mocked(dashboardApi.getDashboardSummary).mockResolvedValue([]);
+  jest.mocked(dashboardApi.getDashboardSummary).mockResolvedValue(pageOf<dashboardApi.SiteSummary>([]));
   render(
     <MemoryRouter initialEntries={['/dashboard']}>
       <App />

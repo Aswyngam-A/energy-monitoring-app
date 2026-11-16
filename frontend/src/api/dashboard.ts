@@ -1,4 +1,5 @@
 import client from './client';
+import type { Page } from './page';
 
 // Typed wrapper around the backend's /api/v1/dashboard endpoints.
 
@@ -17,8 +18,9 @@ export interface SiteSummary {
   openAlerts: number;
 }
 
-// GET /dashboard/summary -> one entry per site, ordered by name (not paginated).
-export async function getDashboardSummary(): Promise<SiteSummary[]> {
-  const response = await client.get<SiteSummary[]>('/dashboard/summary');
+// GET /dashboard/summary?page= -> one page of site summaries, ordered by name:
+// { items, page, size, total } like the other lists (0-based page, the server's default size).
+export async function getDashboardSummary(page = 0): Promise<Page<SiteSummary>> {
+  const response = await client.get<Page<SiteSummary>>('/dashboard/summary', { params: { page } });
   return response.data;
 }
