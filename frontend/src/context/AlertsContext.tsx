@@ -15,6 +15,8 @@ interface AlertsState {
   loading: boolean;
   // Empty string = no error; otherwise a message ready to show.
   error: string;
+  /** When the count was last obtained from the server (null until the first answer). */
+  lastUpdated: Date | null;
   /** Asks the server again (call it after something changed an alert's status). */
   refresh: () => Promise<void>;
 }
@@ -30,6 +32,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   const [openCount, setOpenCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Applies a result to the state (used by the first load and by refresh).
   const apply = useCallback((count: number | null) => {
@@ -38,6 +41,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     } else {
       setOpenCount(count);
       setError('');
+      setLastUpdated(new Date());
     }
     setLoading(false);
   }, []);
@@ -67,7 +71,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   });
 
   return (
-    <AlertsContext.Provider value={{ openCount, loading, error, refresh }}>
+    <AlertsContext.Provider value={{ openCount, loading, error, lastUpdated, refresh }}>
       {children}
     </AlertsContext.Provider>
   );

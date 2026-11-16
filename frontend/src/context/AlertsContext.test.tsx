@@ -106,3 +106,16 @@ describe('polling', () => {
     expect(screen.getByText('a: 3')).toBeInTheDocument();
   });
 });
+
+// ---- UI design pass: the rail shows when the count was last refreshed ----
+test('lastUpdated is null until the first answer, then the time of the latest successful one', async () => {
+  jest.mocked(alertsApi.listAlerts).mockResolvedValue(pageOf<alertsApi.Alert>([], { size: 1, total: 1 }));
+  function LastUpdatedProbe() {
+    const { lastUpdated } = useAlerts();
+    return <p>{lastUpdated === null ? 'never' : `at ${lastUpdated.getTime()}`}</p>;
+  }
+  render(<AlertsProvider><LastUpdatedProbe /></AlertsProvider>);
+  expect(screen.getByText('never')).toBeInTheDocument();
+
+  expect(await screen.findByText(/^at \d+$/)).toBeInTheDocument();
+});

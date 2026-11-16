@@ -1,6 +1,7 @@
 // Tests for the shared page frame: title, nav links and the alert-count badge.
 // The alerts API is mocked; Layout reads the count from the shared AlertsProvider.
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import Layout from './Layout';
 import { AlertsProvider } from '../context/AlertsContext';
@@ -63,4 +64,56 @@ test('shows no badge when there are no open alerts', async () => {
   renderLayout();
   await screen.findByRole('link', { name: /alerts/i });
   expect(screen.queryByLabelText(/open alerts/i)).not.toBeInTheDocument();
+});
+
+// ---- UI design pass: theme toggle, mobile menu, "last updated" ----
+
+describe('theme toggle', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.documentElement.removeAttribute('data-theme');
+  });
+
+  test('switches to dark, remembers the choice and can switch back', async () => {
+    renderLayout();
+    await screen.findByRole('link', { name: /alerts/i });
+
+    // No stored choice: the OS decides (jsdom reports "light"), so the button offers dark.
+    await userEvent.click(screen.getByRole('button', { name: 'Switch to dark theme' }));
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+    expect(localStorage.getItem('energywatch-theme')).toBe('dark');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Switch to light theme' }));
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light');
+    expect(localStorage.getItem('energywatch-theme')).toBe('light');
+  });
+
+  test('starts from the stored choice', async () => {
+    localStorage.setItem('energywatch-theme', 'dark');
+    renderLayout();
+
+    expect(await screen.findByRole('button', { name: 'Switch to light theme' })).toBeInTheDocument();
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+  });
+});
+
+test('the menu button opens and closes the navigation on small screens', async () => {
+  renderLayout();
+  await screen.findByRole('link', { name: /alerts/i });
+  const button = screen.getByRole('button', { name: 'Menu' });
+  expect(button).toHaveAttribute('aria-expanded', 'false');
+
+  await userEvent.click(button);
+  expect(button).toHaveAttribute('aria-expanded', 'true');
+
+  // Choosing a destination closes the menu again.
+  await userEvent.click(screen.getByRole('link', { name: 'Sites' }));
+  expect(button).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('shows when the alert count was last updated', async () => {
+  renderLayout();
+
+  // The time itself depends on the clock; the label and a HH:MM:SS shape are what matter.
+  expect(await screen.findByText(/^Updated \d{2}:\d{2}:\d{2}$/)).toBeInTheDocument();
 });

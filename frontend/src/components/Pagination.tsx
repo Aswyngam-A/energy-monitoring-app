@@ -1,3 +1,5 @@
+import { ChevronLeftIcon, ChevronRightIcon } from './icons';
+
 interface PaginationProps {
   /** Current page, 0-based (as in the API). */
   page: number;
@@ -18,10 +20,10 @@ export default function Pagination({ page, size, total, onPageChange }: Paginati
   if (pageCount <= 1) return null;
 
   return (
-    <nav aria-label="Pagination">
-      <button disabled={page <= 0} onClick={() => { onPageChange(page - 1); }}>Previous page</button>
-      <span>Page {page + 1} of {pageCount}</span>
-      <button disabled={page >= pageCount - 1} onClick={() => { onPageChange(page + 1); }}>Next page</button>
+    <nav aria-label="Pagination" className="pagination">
+      <button disabled={page <= 0} onClick={() => { onPageChange(page - 1); }}><ChevronLeftIcon />Previous page</button>
+      <span className="mono">Page {page + 1} of {pageCount}</span>
+      <button disabled={page >= pageCount - 1} onClick={() => { onPageChange(page + 1); }}>Next page<ChevronRightIcon /></button>
     </nav>
   );
 }
