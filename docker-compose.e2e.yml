@@ -1,0 +1,21 @@
+# Throw-away stack for the end-to-end tests. Use it together with the main file:
+#   docker compose -p energywatch-e2e -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
+# (the e2e/package.json scripts `stack:up` / `stack:down` do exactly that).
+#
+# Why: the tests create sites and alerts and never delete them, so against the normal dev stack
+# the dev database grows with every run. This stack differs in two ways:
+#  - the database lives in memory (tmpfs) instead of the named volume: stopping the stack
+#    discards all data, so every run starts empty;
+#  - the web app is published on port 3100 instead of 3000, and the project name (-p) keeps its
+#    containers and network apart from the dev stack, so both can run at the same time.
+services:
+  db:
+    # !reset removes the volume the main file declares; tmpfs mounts RAM-backed storage there.
+    volumes: !reset []
+    tmpfs:
+      - /var/lib/postgresql
+  web:
+    # !override replaces the main file's port list (without it the lists would be merged and
+    # port 3000 would be published as well, clashing with the dev stack).
+    ports: !override
+      - "3100:80"

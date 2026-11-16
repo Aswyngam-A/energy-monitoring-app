@@ -1,9 +1,9 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
 /**
- * The dashboard shows 20 sites per page, ordered by name, and the shared test database keeps the
- * sites of earlier tests and runs (nothing cleans up), so a freshly created site may be on any
- * page. This opens the dashboard and clicks "Next page" until the card of the site is on screen,
+ * The dashboard shows 20 sites per page, ordered by name, and the database keeps the sites of all
+ * earlier tests (and, on the normal dev stack, of earlier runs: only `npm run test:fresh` starts
+ * from an empty database), so a freshly created site may be on any page. This opens the dashboard and clicks "Next page" until the card of the site is on screen,
  * then returns that card. (Not a spec file: Playwright only runs *.spec.ts.)
  */
 export async function openDashboardAtSite(page: Page, siteName: string): Promise<Locator> {
