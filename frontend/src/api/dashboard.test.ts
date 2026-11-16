@@ -1,6 +1,6 @@
 // Unit tests for the dashboard API client (Axios mocked: only URL, params and returned data are checked).
 import client from './client';
-import { getDashboardSummary } from './dashboard';
+import { getDashboardSummary, getOverview } from './dashboard';
 
 jest.mock('./client');
 
@@ -28,4 +28,14 @@ test('getDashboardSummary asks for the first page by default', async () => {
   await getDashboardSummary();
 
   expect(client.get).toHaveBeenCalledWith('/dashboard/summary', { params: { page: 0 } });
+});
+
+test('getOverview asks for the system-wide totals', async () => {
+  const overview = { sites: 8, openAlerts: 2, totalKw: 410.5, lastReadingAt: '2024-05-01T12:00:00Z' };
+  jest.mocked(client.get).mockResolvedValue({ data: overview });
+
+  const result = await getOverview();
+
+  expect(client.get).toHaveBeenCalledWith('/dashboard/overview');
+  expect(result).toEqual(overview);
 });

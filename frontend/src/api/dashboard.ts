@@ -28,3 +28,18 @@ export async function getDashboardSummary(page = 0): Promise<Page<SiteSummary>> 
   const response = await client.get<Page<SiteSummary>>('/dashboard/summary', { params: { page } });
   return response.data;
 }
+
+// System-wide totals for the home page; matches the backend's Overview record.
+// `totalKw` is the newest reading of every sensor added up; `lastReadingAt` is null without readings.
+export interface Overview {
+  sites: number;
+  openAlerts: number;
+  totalKw: number;
+  lastReadingAt: string | null;
+}
+
+// GET /dashboard/overview
+export async function getOverview(): Promise<Overview> {
+  const response = await client.get<Overview>('/dashboard/overview');
+  return response.data;
+}

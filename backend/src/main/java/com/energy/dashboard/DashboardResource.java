@@ -37,6 +37,35 @@ public class DashboardResource {
     private static final int TREND_POINTS = 24;
 
     /**
+     * GET /dashboard/overview: system-wide totals (see Overview). Three small queries: two counts,
+     * and one that picks each sensor's newest reading with DISTINCT ON (a PostgreSQL feature: the
+     * first row per sensor in the given order, here newest first, id breaking ties) and adds them up.
+     */
+    @GET
+    @Path("/overview")
+    public Overview overview() {
+        long sites = Site.count();
+        long openAlerts = Alert.count("status", AlertStatus.OPEN);
+
+        Object[] row = (Object[]) Reading.getEntityManager().createNativeQuery(
+                """
+                select coalesce(sum(value), 0.000), max(recorded_at) from (
+                  select distinct on (sensor_id) value, recorded_at
+                  from reading
+                  order by sensor_id, recorded_at desc, id desc) latest
+                """)
+            .getSingleResult();
+        // A native query returns the raw JDBC types: NUMERIC -> BigDecimal, TIMESTAMPTZ -> Instant
+        // (Hibernate 6) or java.sql.Timestamp; convert defensively.
+        BigDecimal totalKw = (BigDecimal) row[0];
+        Instant lastReadingAt = row[1] == null ? null
+            : row[1] instanceof java.sql.Timestamp ts ? ts.toInstant()
+            : row[1] instanceof java.time.OffsetDateTime odt ? odt.toInstant()
+            : (Instant) row[1];
+        return new Overview(sites, openAlerts, totalKw, lastReadingAt);
+    }
+
+    /**
      * GET /dashboard/summary?page=&size=: one page of entries, one per site, ordered by name
      * (id breaks ties), each with the latest reading (by measurement time, over all the site's
      * sensors; null if none) and the OPEN-alert count. Paging follows PageParams (400 if invalid).

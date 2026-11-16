@@ -318,4 +318,50 @@ class DashboardResourceTest {
             .body("items[0].trend.size()", is(0))
             .body("items[1].trend", contains(50f));
     }
+
+    // ---- overview: the live numbers of the home page ----
+
+    private ValidatableResponse getOverview() {
+        return given().when().get("/api/v1/dashboard/overview").then();
+    }
+
+    @Test
+    void overviewOfAnEmptySystemIsAllZerosAndNoLastReading() {
+        getOverview().statusCode(200)
+            .body("sites", is(0))
+            .body("openAlerts", is(0))
+            .body("totalKw", is(0f))
+            .body("lastReadingAt", nullValue());
+    }
+
+    @Test
+    void overviewCountsSitesAndOnlyOpenAlerts() {
+        Long a = insertSite("A");
+        Long b = insertSite("B");
+        insertAlert(insertSensor(a, "M1"), AlertStatus.OPEN);
+        insertAlert(insertSensor(b, "M2"), AlertStatus.ACKNOWLEDGED);
+        insertAlert(insertSensor(b, "M3"), AlertStatus.RESOLVED);
+
+        getOverview().statusCode(200)
+            .body("sites", is(2))
+            .body("openAlerts", is(1));
+    }
+
+    @Test
+    void totalKwAddsUpTheLatestReadingOfEverySensor() {
+        Long a = insertSite("A");
+        Long b = insertSite("B");
+        Long meter = insertSensor(a, "Meter");
+        Long pump = insertSensor(b, "Pump");
+        // Only the newest reading of each sensor counts: meter 30 (not 10 or 20), pump 5.
+        insertReading(meter, "10", "2024-05-01T10:00:00Z");
+        insertReading(meter, "30", "2024-05-01T12:00:00Z");
+        insertReading(pump, "5", "2024-05-01T09:00:00Z");
+        insertReading(meter, "20", "2024-05-01T11:00:00Z");
+
+        getOverview().statusCode(200)
+            .body("totalKw", is(35f))
+            // The newest measurement of the whole system, whichever sensor sent it.
+            .body("lastReadingAt", is("2024-05-01T12:00:00Z"));
+    }
 }
