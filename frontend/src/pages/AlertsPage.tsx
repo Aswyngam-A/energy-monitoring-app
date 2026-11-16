@@ -5,6 +5,8 @@ import type { Page } from '../api/page';
 import Pagination from '../components/Pagination';
 import { useAlerts } from '../context/AlertsContext';
 import { formatTimestamp } from '../utils/dates';
+import LoadingState from '../components/LoadingState';
+import ErrorMessage from '../components/ErrorMessage';
 
 // '' = "All". Labels are what the user reads; values are what the API calls the statuses.
 type StatusFilter = AlertStatus | '';
@@ -80,9 +82,9 @@ export default function AlertsPage() {
           ))}
         </select>
       </label>
-      {actionError && <p role="alert">{actionError}</p>}
-      {loading && <p>Loading alerts...</p>}
-      {error && <p role="alert">{error}</p>}
+      <ErrorMessage message={actionError} />
+      {loading && <LoadingState label="alerts" />}
+      <ErrorMessage message={error} />
       {!loading && !error && alerts.length === 0 && <p>No alerts</p>}
       {!loading && !error && alerts.length > 0 && (
         <table>

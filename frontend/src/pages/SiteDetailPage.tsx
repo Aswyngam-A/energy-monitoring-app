@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router';
 import { getSite, type Site } from '../api/sites';
 import ReadingsSection from '../components/ReadingsSection';
 import SensorsSection from '../components/SensorsSection';
+import LoadingState from '../components/LoadingState';
+import ErrorMessage from '../components/ErrorMessage';
 
 /**
  * Page at /sites/:id: shows one site's name and threshold, with links to edit it or go back,
@@ -24,8 +26,8 @@ export default function SiteDetailPage() {
       .finally(() => { setLoading(false); });
   }, [id]);
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p role="alert">{error}</p>;
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorMessage message={error} />;
 
   return (
     <section>

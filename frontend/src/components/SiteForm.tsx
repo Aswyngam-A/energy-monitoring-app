@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import type { SiteInput } from '../api/sites';
+import ErrorMessage from './ErrorMessage';
 
 interface SiteFormProps {
   /** Values to prefill the fields with (edit mode). Leave undefined for an empty form (create mode). */
@@ -88,8 +89,8 @@ export default function SiteForm({ initialValues, submitLabel, onSubmit }: SiteF
         />
         {thresholdError && <p>{thresholdError}</p>}
       </div>
-      {/* role="alert" makes screen readers announce the message when it appears. */}
-      {submitError && <p role="alert">{submitError}</p>}
+      {/* ErrorMessage renders nothing while submitError is empty. */}
+      <ErrorMessage message={submitError} />
       <button type="submit" disabled={submitting}>{submitLabel}</button>
     </form>
   );

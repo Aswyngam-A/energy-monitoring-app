@@ -79,3 +79,14 @@ test('shows the paging controls and asks the server for the next page', async ()
   expect(await screen.findByText('Page 2 of 3')).toBeInTheDocument();
   expect(sitesApi.listSites).toHaveBeenLastCalledWith(1);
 });
+
+test('shows a loading status while the sites are being fetched', async () => {
+  // A request that never answers keeps the page in its loading state.
+  jest.mocked(sitesApi.listSites).mockReturnValue(new Promise(() => {}));
+  render(
+    <MemoryRouter>
+      <SitesListPage />
+    </MemoryRouter>
+  );
+  expect(screen.getByRole('status')).toHaveTextContent('Loading...');
+});

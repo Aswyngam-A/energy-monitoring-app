@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getHealth, type HealthResponse } from '../api/health';
+import LoadingState from '../components/LoadingState';
+import ErrorMessage from '../components/ErrorMessage';
 
 /** Page at /: shows whether the backend answers (its /health status). */
 export default function HomePage() {
@@ -16,7 +18,7 @@ export default function HomePage() {
   }, []);
 
   // Early returns: one page state at a time (loading, error, or the status below).
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p role="alert">{error}</p>;
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorMessage message={error} />;
   return <p>API status: <strong>{health?.status}</strong></p>;
 }

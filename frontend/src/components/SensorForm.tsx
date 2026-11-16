@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import type { SensorInput } from '../api/sensors';
+import ErrorMessage from './ErrorMessage';
 
 interface SensorFormProps {
   /**
@@ -74,8 +75,8 @@ export default function SensorForm({ onSubmit }: SensorFormProps) {
           onChange={(e) => { setType(e.target.value); }}
         />
       </div>
-      {/* role="alert" makes screen readers announce the message when it appears. */}
-      {submitError && <p role="alert">{submitError}</p>}
+      {/* ErrorMessage renders nothing while submitError is empty. */}
+      <ErrorMessage message={submitError} />
       <button type="submit" disabled={submitting}>Add sensor</button>
     </form>
   );

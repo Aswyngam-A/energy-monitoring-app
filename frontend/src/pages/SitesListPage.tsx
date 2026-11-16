@@ -3,6 +3,8 @@ import { Link } from 'react-router';
 import { listSites, type Site } from '../api/sites';
 import type { Page } from '../api/page';
 import Pagination from '../components/Pagination';
+import LoadingState from '../components/LoadingState';
+import ErrorMessage from '../components/ErrorMessage';
 
 /**
  * Page at /sites: one page of sites (name and threshold, newest first) with a link to each one and
@@ -26,8 +28,8 @@ export default function SitesListPage() {
   }, [page]);
 
   // Early returns: one page state at a time (loading, error, or the real content below).
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p role="alert">{error}</p>;
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorMessage message={error} />;
 
   const sites = result?.items ?? [];
 

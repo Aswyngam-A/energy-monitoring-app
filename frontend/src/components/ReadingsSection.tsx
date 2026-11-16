@@ -3,6 +3,8 @@ import { listSiteReadings, type Reading, type ReadingRange } from '../api/readin
 import type { Page } from '../api/page';
 import Pagination from './Pagination';
 import { formatTimestamp, utcInputToIso } from '../utils/dates';
+import LoadingState from './LoadingState';
+import ErrorMessage from './ErrorMessage';
 
 /**
  * The "Readings" part of the site detail page: a table of the readings of all the site's sensors
@@ -110,8 +112,8 @@ export default function ReadingsSection({ siteId }: { siteId: number }) {
         {filterError && <p>{filterError}</p>}
       </form>
 
-      {loading && <p>Loading readings...</p>}
-      {error && <p role="alert">{error}</p>}
+      {loading && <LoadingState label="readings" />}
+      <ErrorMessage message={error} />
       {!loading && !error && readings.length === 0 && <p>No readings found</p>}
       {!loading && readings.length > 0 && (
         <table>

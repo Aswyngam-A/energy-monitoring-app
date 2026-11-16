@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { createSensor, listSensors, type Sensor, type SensorInput } from '../api/sensors';
 import SensorForm from './SensorForm';
+import LoadingState from './LoadingState';
+import ErrorMessage from './ErrorMessage';
 
 /**
  * The "Sensors" part of the site detail page: lists the site's sensors and lets the user add one.
@@ -30,8 +32,8 @@ export default function SensorsSection({ siteId }: { siteId: number }) {
   return (
     <section>
       <h3>Sensors</h3>
-      {loading && <p>Loading sensors...</p>}
-      {error && <p role="alert">{error}</p>}
+      {loading && <LoadingState label="sensors" />}
+      <ErrorMessage message={error} />
       {!loading && !error && sensors.length === 0 && <p>No sensors yet</p>}
       {sensors.length > 0 && (
         <ul>

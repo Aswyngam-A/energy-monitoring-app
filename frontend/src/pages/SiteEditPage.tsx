@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { getSite, updateSite, type Site, type SiteInput } from '../api/sites';
 import SiteForm from '../components/SiteForm';
+import LoadingState from '../components/LoadingState';
+import ErrorMessage from '../components/ErrorMessage';
 
 /**
  * Page at /sites/:id/edit: loads the site, shows it in a prefilled form,
@@ -28,8 +30,8 @@ export default function SiteEditPage() {
     void navigate(`/sites/${id}`);
   }
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p role="alert">{error}</p>;
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorMessage message={error} />;
 
   return (
     <section>

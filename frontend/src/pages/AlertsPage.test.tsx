@@ -178,3 +178,10 @@ test('shows an alert when the change is refused and keeps the table', async () =
   expect(await screen.findByRole('alert')).toHaveTextContent(/could not update alert/i);
   expect(screen.getAllByRole('row')).toHaveLength(2);
 });
+
+test('shows a loading status while the alerts are being fetched', async () => {
+  jest.mocked(alertsApi.listAlerts).mockReturnValue(new Promise(() => {}));
+  renderPage();
+
+  expect(screen.getByRole('status')).toHaveTextContent('Loading alerts...');
+});
