@@ -1,111 +1,114 @@
+/*
+ * Design foundation for EnergyWatch ("control-room ledger"): colour/type/spacing tokens for the
+ * light and dark themes, a small reset and the base element styles. Component styles live in
+ * App.css and only use the variables defined here, so a theme is just a different set of values.
+ *
+ * Theme selection: <html data-theme="light|dark"> forces a theme (set by the toggle in the rail).
+ * Without the attribute the operating system's preference decides.
+ */
+
+/* ---- Tokens shared by both themes ---- */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --sans: 'IBM Plex Sans', system-ui, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* 4px spacing grid */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+  --radius: 2px;
+  --rail-w: 208px;
+  --content-max: 1280px;
+  --motion: 150ms ease-out;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
+  font-family: var(--sans);
+  font-size: 14.5px;
+  line-height: 1.45;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
+/* ---- Light theme (warm paper) ---- */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f4f2ee;
+  --surface: #fbfaf8;
+  --ink: #1e1d1b;
+  --muted: #66625b;      /* 5.6:1 on --bg */
+  --rule: #d9d5cc;
+  --rule-strong: #b3ada0;
+  --accent: #1f6f6b;
+  --accent-ink: #ffffff;
+  --accent-wash: #dfeceb;
+  --open: #8a5200;       --open-wash: #f6e7c8;
+  --ack: #36557f;        --ack-wash: #dce5f1;
+  --done: #386041;       --done-wash: #dceadd;
+  --danger: #a63a2b;     --danger-wash: #f5dfda;
+  --highlight: #f3e3b3;  /* flash on a value that just changed */
+}
+
+/* ---- Dark theme (warm charcoal) ---- */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #1a1917;
+  --surface: #211f1d;
+  --ink: #ece8e1;
+  --muted: #a09a8e;
+  --rule: #36332f;
+  --rule-strong: #54504a;
+  --accent: #62b6b0;
+  --accent-ink: #11201f;
+  --accent-wash: #1c2e2d;
+  --open: #e3a947;       --open-wash: #3a2e17;
+  --ack: #94b4e0;        --ack-wash: #1f2b3b;
+  --done: #8cbf94;       --done-wash: #1e2e21;
+  --danger: #e57a68;     --danger-wash: #3d2420;
+  --highlight: #4a3f1f;
+}
+
+/* Follow the OS when the user has not chosen a theme. Same values as the dark block above. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --bg: #1a1917;
+    --surface: #211f1d;
+    --ink: #ece8e1;
+    --muted: #a09a8e;
+    --rule: #36332f;
+    --rule-strong: #54504a;
+    --accent: #62b6b0;
+    --accent-ink: #11201f;
+    --accent-wash: #1c2e2d;
+    --open: #e3a947;       --open-wash: #3a2e17;
+    --ack: #94b4e0;        --ack-wash: #1f2b3b;
+    --done: #8cbf94;       --done-wash: #1e2e21;
+    --danger: #e57a68;     --danger-wash: #3d2420;
+    --highlight: #4a3f1f;
   }
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
+/* ---- Reset ---- */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); }
+h1, h2, h3, p, figure { margin: 0; }
+button, input, select { font: inherit; color: inherit; }
+table { border-collapse: collapse; width: 100%; }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+/* ---- Base elements ---- */
+h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+h2 { font-size: 22px; }
+h3 { font-size: 15px; }
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+small { color: var(--muted); font-size: 12.5px; }
+strong { font-weight: 600; }
+
+/* Numbers, timestamps and ids use the mono face with fixed-width digits so columns line up. */
+code, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* A visible keyboard focus ring everywhere; mouse clicks do not show it. */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Respect the "reduce motion" setting: no transitions or animations at all. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
 }
