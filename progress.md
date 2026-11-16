@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M5 — Alerts, in progress (step 6 of 7 done)
+**Current milestone:** M6 — Alert lifecycle, not started
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -18,7 +18,7 @@
 | M2 | Sites | Done | [docs/milestones/M2-sites.md](docs/milestones/M2-sites.md) |
 | M3 | Sensors | Done | [docs/milestones/M3-sensors.md](docs/milestones/M3-sensors.md) |
 | M4 | Readings ingestion | Done | [docs/milestones/M4-readings.md](docs/milestones/M4-readings.md) |
-| M5 | Alerts | In progress | [docs/milestones/M5-alerts.md](docs/milestones/M5-alerts.md) |
+| M5 | Alerts | Done | [docs/milestones/M5-alerts.md](docs/milestones/M5-alerts.md) |
 | M6 | Alert lifecycle | Not started | [docs/milestones/M6-alert-lifecycle.md](docs/milestones/M6-alert-lifecycle.md) |
 | M7 | Dashboard + hardening | Not started | [docs/milestones/M7-dashboard-hardening.md](docs/milestones/M7-dashboard-hardening.md) |
 
@@ -80,6 +80,7 @@
 - 2026-11-16 — **M5 step 4 done (backend complete).** `GET /api/v1/alerts?siteId=` in `AlertResource` + `AlertResponse` (`id, siteId, sensorId, readingId, value, threshold, createdAt, status`): newest first (`createdAt desc, id desc`), optional site filter done in the DB (`site.id`), `[]` when empty, 404 unknown site, 400 for a non-numeric siteId. Lesson: a `@QueryParam Long` with garbage makes JAX-RS answer **404**, not 400; the red test caught it, so the parameter is read as a `String` and parsed by hand (same approach as the date params in M4). `AlertResourceTest` (7 tests; 6 red first (404), the malformed-id one red on the first implementation). `./mvnw verify` green (76 unit + 2 IT). Step 3 pushed as 896c5f0, CI green. Next: step 5 frontend `api/alerts.ts` + alerts page.
 - 2026-11-16 — **M5 step 5 done.** `api/alerts.ts` (`Alert`, `AlertStatus = 'OPEN'`, `listAlerts(siteId?)` sending `siteId` only when given), `AlertsPage` at `/alerts` (loading / error / "No alerts" / table: time UTC, link `Site <id>`, sensor id, value (kW), threshold (kW), status; newest first as the API returns), route in `App.tsx`, "Alerts" nav link in `Layout`. 10 new tests across `alerts.test.ts`, `AlertsPage.test.tsx`, `Layout.test.tsx`, `App.test.tsx`, all red first (modules / link missing). `npm run check` green (17 suites, 72 tests, no act warnings). Step 4 pushed as 0573b75, CI green. The page shows ids, not names (the alert only carries ids): showing site/sensor names is a possible M7 polish. Next: step 6 nav badge with the alert count (shared state with the page).
 - 2026-11-16 — **M5 step 6 done.** Nav badge with the alert count. New `context/AlertsContext.tsx`: `AlertsProvider` loads `listAlerts()` once and shares `{alerts, loading, error}`; `useAlerts()` throws outside a provider. The provider sits in `App.tsx` above the routes, so `Layout` (badge = number of OPEN alerts, hidden at 0, `aria-label="N open alerts"`) and `AlertsPage` read the same data with a single request. Tests (red first, module missing): `AlertsContext.test.tsx` (3: one request for two readers, error message, throws without provider), `Layout.test.tsx` (badge shown / hidden), pages/App tests wrapped or stubbed. Known limit: the list is loaded once per page load, so a new alert shows after a reload (refresh/polling is a possible M6/M7 item). `npm run check` green (18 suites, 77 tests). Step 5 pushed as e6e186d, CI green. Next: step 7 e2e + M5 close-out.
+- 2026-11-16 — **M5 done.** Step 7: `e2e/tests/alerts.spec.ts` (4 tests: a reading above the threshold shows an OPEN alert row with value and threshold; a reading equal to the threshold raises none; the nav badge shows on another page (shape only, since totals depend on other tests); the alert's site link opens the site page). Rows are found through the `Site <id>` link, never by totals. Red first against old images, green after `docker compose up -d --build`; second run on the same DB also passed. All checks green: `./mvnw verify` (76 unit + 2 IT), `npm run check` (77 tests), `playwright test` (16 passed). Step 6 pushed as 47d87fe, CI green. M5 section added to `docs/learning-notes.md`. Next: M6 (decide dedup rule and whether reopening is allowed).
 
 ## Known issues / blocked
 - Site readings list is unbounded (no limit/paging): fine for practice data, revisit in M7.
