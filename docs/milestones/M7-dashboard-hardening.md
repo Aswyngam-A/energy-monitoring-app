@@ -1,6 +1,6 @@
 # M7 — Dashboard + hardening
 
-**Status:** Not started
+**Status:** In progress
 
 ## Goal
 An overview page shows each site's latest reading, a chart, and open-alert counts; list endpoints are paginated; the UI handles loading and errors consistently.
@@ -32,3 +32,5 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 
 ## Status log
 - 2026-11-11 — Created.
+- 2026-11-16 — Started. Decisions: (1) **chart library = Recharts** (mainstream React charting; in Jest it needs fixed width/height because jsdom has no layout). (2) **Pagination shape = `{ items, page, size, total }`** (not headers: the body is self-describing and easy to type); `page` is 0-based, default `size` 20, max 100, bad values -> 400; applied to the three unbounded lists: sites, site readings, alerts (a breaking change for the frontend clients, handled in step 5). (3) Summary per site: `{ siteId, siteName, latestReading: { value, timestamp } | null, openAlerts }`, where `openAlerts` counts status OPEN only (same as the nav badge); the chart on the overview shows the last readings of the selected site, fetched from the paginated readings endpoint. (4) Hardening carried over from M5/M6: catch-all 500 mapper with the standard error body, a partial unique index (V5) so the database enforces "one active alert per sensor" (closes the dedup race), shared `LoadingState`/`ErrorMessage` components, alerts page shows site/sensor names if cheap.
+- Plan: 1 pagination foundation (`Page` record, parameter parsing) + alerts list; 2 sites and site readings paginated; 3 `GET /dashboard/summary`; 4 backend hardening (500 mapper, V5 partial unique index + race test); 5 frontend clients and pagination controls adapted to the new shape; 6 shared LoadingState/ErrorMessage used by every page; 7 overview page + Recharts chart; 8 e2e happy path (site -> sensor -> reading -> alert -> acknowledge) + M7 close-out.
