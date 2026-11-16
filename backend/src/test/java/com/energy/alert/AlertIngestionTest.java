@@ -11,7 +11,12 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -228,5 +233,39 @@ class AlertIngestionTest {
 
         assertEquals(0, Reading.count());
         assertEquals(0, alerts().size());
+    }
+
+    /**
+     * The dedup check ("does the sensor already have an active alert?") followed by the insert is
+     * not atomic: two requests arriving together could both see "no alert" and both insert one.
+     * Many breaching readings are sent at the same moment; every request must still succeed (201)
+     * and exactly one alert must exist.
+     */
+    @Test
+    void simultaneousBreachesRaiseExactlyOneAlertAndNoRequestFails() throws Exception {
+        Long sensorId = insertSensor("100.00");
+        int requests = 8;
+        ExecutorService pool = Executors.newFixedThreadPool(requests);
+        CountDownLatch start = new CountDownLatch(1); // all threads wait here, then go together
+        try {
+            List<Future<Integer>> statuses = new ArrayList<>();
+            for (int i = 0; i < requests; i++) {
+                statuses.add(pool.submit(() -> {
+                    start.await();
+                    return postReading(sensorId, """
+                        { "value": 150 }
+                        """).extract().statusCode();
+                }));
+            }
+            start.countDown();
+            for (Future<Integer> status : statuses) {
+                assertEquals(201, status.get());
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+
+        assertEquals(1, alerts().size());
+        assertEquals(requests, Reading.count()); // every reading is stored
     }
 }

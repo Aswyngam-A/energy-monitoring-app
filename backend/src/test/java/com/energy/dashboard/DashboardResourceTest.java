@@ -61,6 +61,16 @@ class DashboardResourceTest {
     @Transactional
     void insertAlert(Long sensorId, AlertStatus status) {
         Sensor sensor = Sensor.findById(sensorId);
+        // The database allows only one active alert per sensor (V5): extra active alerts for the
+        // same site go to an extra sensor of that site.
+        if (status != AlertStatus.RESOLVED
+                && Alert.count("sensor.id = ?1 and status <> ?2", sensor.id, AlertStatus.RESOLVED) > 0) {
+            Site site = sensor.site;
+            sensor = new Sensor();
+            sensor.name = "Extra sensor";
+            sensor.site = site;
+            sensor.persist();
+        }
         Reading reading = new Reading();
         reading.sensor = sensor;
         reading.value = new BigDecimal("150");

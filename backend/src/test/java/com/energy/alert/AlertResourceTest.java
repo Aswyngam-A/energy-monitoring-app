@@ -54,8 +54,18 @@ class AlertResourceTest {
     /** Same, with a chosen status (for the PATCH tests). */
     @Transactional
     Long insertAlert(Ids ids, String value, String createdAt, AlertStatus status) {
+        // The database allows only one active alert per sensor (V5). Tests that need several
+        // active alerts on one site get an extra sensor for each additional one.
+        Sensor sensor = Sensor.findById(ids.sensorId());
+        if (AlertTransitions.isActive(status)
+                && Alert.count("sensor.id = ?1 and status <> ?2", sensor.id, AlertStatus.RESOLVED) > 0) {
+            sensor = new Sensor();
+            sensor.name = "Extra sensor";
+            sensor.site = Site.findById(ids.siteId());
+            sensor.persist();
+        }
         Reading reading = new Reading();
-        reading.sensor = Sensor.findById(ids.sensorId());
+        reading.sensor = sensor;
         reading.value = new BigDecimal(value);
         reading.timestamp = Instant.parse(createdAt);
         reading.persist();

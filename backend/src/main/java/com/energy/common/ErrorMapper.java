@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import java.util.List;
 
@@ -12,6 +13,8 @@ import java.util.List;
  * so clients always receive the same JSON shape whatever went wrong.
  */
 public class ErrorMapper {
+
+    private static final Logger LOG = Logger.getLogger(ErrorMapper.class);
 
     /** Any WebApplicationException (e.g. NotFoundException -> 404) keeps its status; the body gets our shape. */
     @ServerExceptionMapper
@@ -42,6 +45,22 @@ public class ErrorMapper {
 
         ErrorResponse body = new ErrorResponse(400, "Bad Request", "Validation failed", details);
         return Response.status(400)
+            .entity(body)
+            .type(MediaType.APPLICATION_JSON)
+            .build();
+    }
+
+    /**
+     * Safety net for anything unexpected (a bug, a database failure): a standard 500 body instead
+     * of the framework's default page. The details go to the server log only; the client gets a
+     * fixed message, because exception text can reveal internals (class names, SQL, hosts).
+     * More specific mappers above still win for their own exception types.
+     */
+    @ServerExceptionMapper
+    public Response mapUnexpected(Throwable ex) {
+        LOG.error("Unexpected error", ex);
+        ErrorResponse body = new ErrorResponse(500, "Internal Server Error", "Unexpected error", List.of());
+        return Response.status(500)
             .entity(body)
             .type(MediaType.APPLICATION_JSON)
             .build();

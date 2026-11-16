@@ -37,3 +37,4 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 - 2026-11-16 — Step 1 done: PageParams + PageResponse, alerts paginated, 15 new tests; frontend listAlerts temporarily asks for size 100. All checks green (116 unit + 2 IT, 87 frontend, 20 e2e).
 - 2026-11-16 — Step 2 done: sites (newest first) and site readings paginated, 7 tests, frontend clients bridged with size=100; all checks green (123 unit + 2 IT, 88 frontend, 20 e2e).
 - 2026-11-16 — Step 3 done: GET /dashboard/summary with aggregate queries, 6 tests; all checks green (129 unit + 2 IT, 88 frontend, 20 e2e).
+- 2026-11-16 — Step 4 done: catch-all 500 mapper, dedup race fixed (row lock + V5 partial unique index), 5 new tests; all checks green (135 unit + 2 IT, 88 frontend, 20 e2e). Backend complete.

@@ -2,6 +2,7 @@ package com.energy.alert;
 
 import com.energy.reading.Reading;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
 
 import java.time.Instant;
@@ -41,6 +42,13 @@ public class AlertService {
         if (!ThresholdRule.isBreached(reading.value, site.threshold)) {
             return Optional.empty();
         }
+
+        // Serialize breaches of the same sensor: take a row lock on the sensor (released when the
+        // transaction ends). A second request for the same sensor waits here until the first has
+        // committed, so its check below sees the first one's alert. Without the lock, two requests
+        // could both see "no active alert" and both insert one; the unique index of migration V5
+        // would then refuse the second insert and that request would fail with a 500.
+        Alert.getEntityManager().lock(sensor, LockModeType.PESSIMISTIC_WRITE);
 
         // Dedup is per sensor (not per site): two meters on one site each report their own problem.
         // The active statuses come from AlertTransitions, so the rule lives in one place.
