@@ -14,7 +14,10 @@ export type AlertStatus = 'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED';
 export interface Alert {
   id: number;
   siteId: number;
+  // Names of the site and sensor, so the UI can show them instead of ids.
+  siteName: string;
   sensorId: number;
+  sensorName: string;
   readingId: number;
   value: number;
   threshold: number;

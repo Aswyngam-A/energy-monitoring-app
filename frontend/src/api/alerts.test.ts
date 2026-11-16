@@ -9,7 +9,9 @@ jest.mock('./client');
 const alert = {
   id: 1,
   siteId: 7,
+  siteName: 'Plant North',
   sensorId: 3,
+  sensorName: 'Main meter',
   readingId: 12,
   value: 150.5,
   threshold: 100,

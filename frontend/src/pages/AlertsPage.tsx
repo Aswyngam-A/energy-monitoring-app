@@ -19,7 +19,8 @@ const FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
 
 /**
  * Page at /alerts: alerts newest first, one page at a time, with the time in UTC, a link to the
- * site, the sensor, the value that exceeded the threshold, and the status. The status filter and
+ * site (labelled with its name), the sensor name, the value that exceeded the threshold, and the
+ * status. The status filter and
  * the page number are sent to the server (the list is paginated, so filtering the loaded page in
  * the browser would give wrong results), and each alert offers the actions its status allows.
  */
@@ -103,9 +104,9 @@ export default function AlertsPage() {
             {alerts.map((alert) => (
               <tr key={alert.id}>
                 <td>{formatTimestamp(alert.createdAt)}</td>
-                {/* The alert only carries the site's id, so the link text is "Site <id>". */}
-                <td><Link to={`/sites/${alert.siteId}`}>Site {alert.siteId}</Link></td>
-                <td>{alert.sensorId}</td>
+                {/* The alert carries the names, so they are shown; the id is only used for the link. */}
+                <td><Link to={`/sites/${alert.siteId}`}>{alert.siteName}</Link></td>
+                <td>{alert.sensorName}</td>
                 <td>{alert.value}</td>
                 <td>{alert.threshold}</td>
                 <td>{alert.status}</td>

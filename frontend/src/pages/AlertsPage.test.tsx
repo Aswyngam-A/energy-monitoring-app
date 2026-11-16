@@ -17,7 +17,7 @@ beforeEach(() => {
 });
 
 const alert = (id: number, status: alertsApi.AlertStatus, extra: Partial<alertsApi.Alert> = {}): alertsApi.Alert => ({
-  id, siteId: 7, sensorId: 3, readingId: id, value: 100 + id, threshold: 100,
+  id, siteId: 7, siteName: 'Plant North', sensorId: 3, sensorName: 'Main meter', readingId: id, value: 100 + id, threshold: 100,
   createdAt: `2024-05-01T1${id}:00:00Z`, status, ...extra,
 });
 
@@ -69,12 +69,26 @@ test('shows each alert as a row, in the order received (newest first)', async ()
   expect(within(rows[2]).getByText('RESOLVED')).toBeInTheDocument();
 });
 
-test('each alert links to the page of its site', async () => {
-  mockApi(() => [alert(2, 'OPEN', { siteId: 7 }), alert(1, 'OPEN', { siteId: 8 })]);
+// Replaces "each alert links to the page of its site" (link text "Site <id>"): decided in polish
+// item 1 that the page shows names instead of ids. The link target is unchanged.
+test('each alert links to the page of its site, using the site name as the link text', async () => {
+  mockApi(() => [
+    alert(2, 'OPEN', { siteId: 7, siteName: 'Plant North' }),
+    alert(1, 'OPEN', { siteId: 8, siteName: 'Plant South' }),
+  ]);
   renderPage();
 
-  expect(await screen.findByRole('link', { name: 'Site 7' })).toHaveAttribute('href', '/sites/7');
-  expect(screen.getByRole('link', { name: 'Site 8' })).toHaveAttribute('href', '/sites/8');
+  expect(await screen.findByRole('link', { name: 'Plant North' })).toHaveAttribute('href', '/sites/7');
+  expect(screen.getByRole('link', { name: 'Plant South' })).toHaveAttribute('href', '/sites/8');
+  // The numeric id is no longer shown as text.
+  expect(screen.queryByText('Site 7')).not.toBeInTheDocument();
+});
+
+test('shows the sensor name instead of the sensor id', async () => {
+  mockApi(() => [alert(2, 'OPEN', { sensorId: 3, sensorName: 'Main meter' })]);
+  renderPage();
+
+  expect(await screen.findByText('Main meter')).toBeInTheDocument();
 });
 
 test('shows a message when there are no alerts', async () => {

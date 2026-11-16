@@ -2,6 +2,7 @@ package com.energy.alert;
 
 import com.energy.common.PageParams;
 import com.energy.common.PageResponse;
+import com.energy.sensor.Sensor;
 import com.energy.site.Site;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
@@ -78,8 +79,9 @@ public class AlertResource {
 
         // One query for the requested slice (LIMIT/OFFSET) and one COUNT for the total of all
         // matching rows, which is what lets a client know how many pages exist.
-        List<AlertResponse> items = query.page(Page.of(paging.page(), paging.size()))
-            .list().stream().map(AlertResponse::from).toList();
+        List<Alert> slice = query.page(Page.of(paging.page(), paging.size())).list();
+        preloadNames(slice);
+        List<AlertResponse> items = slice.stream().map(AlertResponse::from).toList();
         return new PageResponse<>(items, paging.page(), paging.size(), query.count());
     }
 
@@ -104,6 +106,22 @@ public class AlertResource {
         // The entity is managed inside this transaction, so the change is saved on commit.
         alert.status = request.status();
         return AlertResponse.from(alert);
+    }
+
+    /**
+     * Loads the sites and sensors of a page of alerts with one query each (IN lists). The alerts
+     * only hold lazy references to them; once the real rows are in the persistence context,
+     * reading siteName/sensorName costs nothing more. Without this, every alert would trigger
+     * its own queries (the N+1 problem). The page is at most 100 alerts, so the IN lists stay small.
+     */
+    private static void preloadNames(List<Alert> alerts) {
+        if (alerts.isEmpty()) {
+            return;
+        }
+        List<Long> siteIds = alerts.stream().map(a -> a.site.id).distinct().toList();
+        List<Long> sensorIds = alerts.stream().map(a -> a.sensor.id).distinct().toList();
+        Site.list("id in ?1", siteIds);
+        Sensor.list("id in ?1", sensorIds);
     }
 
     /** Parses the optional siteId: absent or blank stays null (no filter), garbage becomes a 400. */

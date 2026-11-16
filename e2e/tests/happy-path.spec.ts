@@ -45,7 +45,7 @@ test('create site, register sensor, receive an over-threshold reading, see the a
 
   // 6. The alerts page lists the alert as OPEN; the nav badge shows open alerts.
   await page.getByRole('link', { name: /^Alerts/ }).click();
-  const row = page.getByRole('row').filter({ has: page.getByRole('link', { name: `Site ${siteId}`, exact: true }) });
+  const row = page.getByRole('row').filter({ has: page.getByRole('link', { name: siteName, exact: true }) });
   await expect(row).toContainText('130.5');
   await expect(row).toContainText('OPEN');
   await expect(page.getByLabel(/^\d+ open alerts$/)).toBeVisible();

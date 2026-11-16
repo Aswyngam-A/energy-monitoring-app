@@ -130,6 +130,31 @@ class AlertResourceTest {
             .body("items[0].status", is("OPEN"));
     }
 
+    /** Polish item 1: the UI shows names, so the alert carries the site's and the sensor's name. */
+    @Test
+    void eachAlertCarriesTheNamesOfItsSiteAndSensor() {
+        Ids ids = insertSiteWithSensor("Plant North");
+        insertAlert(ids, "150.5", "2024-05-01T10:00:00Z");
+
+        get(null)
+            .statusCode(200)
+            .body("items[0].siteName", is("Plant North"))
+            // insertSiteWithSensor names the sensor "<site name> meter".
+            .body("items[0].sensorName", is("Plant North meter"));
+    }
+
+    /** The PATCH response is an AlertResponse too, so it must carry the names as well. */
+    @Test
+    void patchResponseCarriesTheNamesToo() {
+        Ids ids = insertSiteWithSensor("Plant South");
+        Long alertId = insertAlert(ids, "150.5", "2024-05-01T10:00:00Z");
+
+        patch(alertId, "{\"status\":\"ACKNOWLEDGED\"}")
+            .statusCode(200)
+            .body("siteName", is("Plant South"))
+            .body("sensorName", is("Plant South meter"));
+    }
+
     @Test
     void siteIdKeepsOnlyThatSitesAlerts() {
         Ids a = insertSiteWithSensor("A");
