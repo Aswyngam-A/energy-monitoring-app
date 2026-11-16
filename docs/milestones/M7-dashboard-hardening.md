@@ -1,6 +1,6 @@
 # M7 — Dashboard + hardening
 
-**Status:** In progress
+**Status:** Done
 
 ## Goal
 An overview page shows each site's latest reading, a chart, and open-alert counts; list endpoints are paginated; the UI handles loading and errors consistently.
@@ -41,3 +41,4 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 - 2026-11-16 — Step 5 done: clients return pages, Pagination component, paging on sites/readings/alerts, alerts status filter server-side, badge from the server total; all checks green (135 unit + 2 IT, 95 frontend, 20 e2e).
 - 2026-11-16 — Step 6 done: LoadingState and ErrorMessage used by every page, section and form; all checks green (135 unit + 2 IT, 102 frontend, 20 e2e).
 - 2026-11-16 — Step 7 done: /dashboard with site cards and Recharts line chart, dashboard e2e; all checks green (135 unit + 2 IT, 114 frontend, 22 e2e).
+- 2026-11-16 — Step 8 done: e2e happy path `happy-path.spec.ts`; all checks green (135 unit + 2 IT, 114 frontend, 23 e2e). **M7 done.**
