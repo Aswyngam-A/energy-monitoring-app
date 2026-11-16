@@ -6,6 +6,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ReadingsSection from './ReadingsSection';
 import * as readingsApi from '../api/readings';
+import { pageOf } from '../testUtils';
 
 jest.mock('../api/readings');
 
@@ -15,14 +16,14 @@ const readings = [
 ];
 
 beforeEach(() => {
-  jest.mocked(readingsApi.listSiteReadings).mockResolvedValue(readings);
+  jest.mocked(readingsApi.listSiteReadings).mockResolvedValue(pageOf(readings));
 });
 
 test('loads the site readings without a range at first', async () => {
   render(<ReadingsSection siteId={7} />);
 
   await screen.findAllByRole('row');
-  expect(readingsApi.listSiteReadings).toHaveBeenCalledWith(7, {});
+  expect(readingsApi.listSiteReadings).toHaveBeenCalledWith(7, {}, 0);
 });
 
 test('shows each reading as a row with time (UTC), sensor and value, in the order received', async () => {
@@ -38,7 +39,7 @@ test('shows each reading as a row with time (UTC), sensor and value, in the orde
 });
 
 test('shows a message when there are no readings', async () => {
-  jest.mocked(readingsApi.listSiteReadings).mockResolvedValue([]);
+  jest.mocked(readingsApi.listSiteReadings).mockResolvedValue(pageOf<readingsApi.Reading>([]));
   render(<ReadingsSection siteId={7} />);
 
   expect(await screen.findByText(/no readings found/i)).toBeInTheDocument();
@@ -63,7 +64,7 @@ test('applying the filter reloads with from and to as ISO instants (the inputs a
   expect(readingsApi.listSiteReadings).toHaveBeenLastCalledWith(7, {
     from: '2024-05-01T10:00:00.000Z',
     to: '2024-05-01T12:00:00.000Z',
-  });
+  }, 0);
   // Wait for the reload to settle so no state update happens after the test ends.
   await screen.findAllByRole('row');
 });
@@ -92,6 +93,33 @@ test('clearing the filter empties the inputs and reloads without a range', async
   await userEvent.click(screen.getByRole('button', { name: /clear/i }));
 
   expect(screen.getByLabelText(/from/i)).toHaveValue('');
-  expect(readingsApi.listSiteReadings).toHaveBeenLastCalledWith(7, {});
+  expect(readingsApi.listSiteReadings).toHaveBeenLastCalledWith(7, {}, 0);
   await screen.findAllByRole('row');
+});
+
+test('shows the paging controls and asks the server for the next page of readings', async () => {
+  // 45 readings in total, 20 per page -> 3 pages.
+  jest.mocked(readingsApi.listSiteReadings).mockResolvedValue(pageOf(readings, { total: 45 }));
+  render(<ReadingsSection siteId={7} />);
+  expect(await screen.findByText('Page 1 of 3')).toBeInTheDocument();
+
+  await userEvent.click(screen.getByRole('button', { name: 'Next page' }));
+
+  expect(await screen.findByText('Page 2 of 3')).toBeInTheDocument();
+  expect(readingsApi.listSiteReadings).toHaveBeenLastCalledWith(7, {}, 1);
+});
+
+test('applying a filter goes back to the first page', async () => {
+  jest.mocked(readingsApi.listSiteReadings).mockResolvedValue(pageOf(readings, { total: 45 }));
+  render(<ReadingsSection siteId={7} />);
+  await screen.findByText('Page 1 of 3');
+  await userEvent.click(screen.getByRole('button', { name: 'Next page' }));
+  await screen.findByText('Page 2 of 3');
+
+  fireEvent.change(screen.getByLabelText(/from/i), { target: { value: '2024-05-01T10:00' } });
+  await userEvent.click(screen.getByRole('button', { name: /apply filter/i }));
+
+  // A page number from the old result set makes no sense for the new one.
+  expect(readingsApi.listSiteReadings).toHaveBeenLastCalledWith(7, { from: '2024-05-01T10:00:00.000Z' }, 0);
+  await screen.findByText('Page 1 of 3');
 });

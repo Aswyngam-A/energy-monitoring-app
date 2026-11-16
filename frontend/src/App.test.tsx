@@ -4,13 +4,14 @@ import { MemoryRouter } from 'react-router';
 import * as healthApi from './api/health';
 import * as alertsApi from './api/alerts';
 import App from './App';
+import { pageOf } from './testUtils';
 
 jest.mock('./api/health');
 jest.mock('./api/alerts');
 
 // App now loads alerts for the nav badge on every route, so every test needs the API stubbed.
 beforeEach(() => {
-  jest.mocked(alertsApi.listAlerts).mockResolvedValue([]);
+  jest.mocked(alertsApi.listAlerts).mockResolvedValue(pageOf<alertsApi.Alert>([]));
 });
 
 test('shows UP when getHealth resolves', async () => {

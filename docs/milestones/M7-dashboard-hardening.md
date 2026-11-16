@@ -38,3 +38,4 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 - 2026-11-16 — Step 2 done: sites (newest first) and site readings paginated, 7 tests, frontend clients bridged with size=100; all checks green (123 unit + 2 IT, 88 frontend, 20 e2e).
 - 2026-11-16 — Step 3 done: GET /dashboard/summary with aggregate queries, 6 tests; all checks green (129 unit + 2 IT, 88 frontend, 20 e2e).
 - 2026-11-16 — Step 4 done: catch-all 500 mapper, dedup race fixed (row lock + V5 partial unique index), 5 new tests; all checks green (135 unit + 2 IT, 88 frontend, 20 e2e). Backend complete.
+- 2026-11-16 — Step 5 done: clients return pages, Pagination component, paging on sites/readings/alerts, alerts status filter server-side, badge from the server total; all checks green (135 unit + 2 IT, 95 frontend, 20 e2e).

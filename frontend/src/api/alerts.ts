@@ -1,4 +1,5 @@
 import client from './client';
+import type { Page } from './page';
 
 // Typed wrapper around the backend's /api/v1/alerts endpoint.
 // A non-2xx status makes Axios throw; the calling component decides how to show the error.
@@ -21,23 +22,25 @@ export interface Alert {
   status: AlertStatus;
 }
 
-// The backend returns lists as a page: { items, page, size, total } (decided in M7).
-interface AlertPage {
-  items: Alert[];
-  page: number;
-  size: number;
-  total: number;
+// What the list can be narrowed by. Everything is optional; only the values that are given are sent.
+export interface AlertQuery {
+  siteId?: number;
+  status?: AlertStatus;
+  // 0-based page number and items per page (the backend defaults to page 0, 20 items, max 100).
+  page?: number;
+  size?: number;
 }
 
-// GET /alerts or GET /alerts?siteId= -> alerts newest first. Without a siteId every site is included.
-// TEMPORARY (until M7 step 5 adds pagination controls): asks for the largest page the backend
-// allows (100) and returns only its items, so the page and the nav badge keep working.
-export async function listAlerts(siteId?: number): Promise<Alert[]> {
-  // Only send siteId when there is one; the backend treats a missing parameter as "no filter".
-  const params: { siteId?: number; size: number } = { size: 100 };
-  if (siteId !== undefined) params.siteId = siteId;
-  const response = await client.get<AlertPage>('/alerts', { params });
-  return response.data.items;
+// GET /alerts -> one page of alerts, newest first: { items, page, size, total }.
+export async function listAlerts(query: AlertQuery = {}): Promise<Page<Alert>> {
+  // Only send what has a value; the backend treats a missing parameter as "no filter" / default.
+  const params: AlertQuery = {};
+  if (query.siteId !== undefined) params.siteId = query.siteId;
+  if (query.status !== undefined) params.status = query.status;
+  if (query.page !== undefined) params.page = query.page;
+  if (query.size !== undefined) params.size = query.size;
+  const response = await client.get<Page<Alert>>('/alerts', { params });
+  return response.data;
 }
 
 // PATCH /alerts/{id} -> the updated alert. The backend answers 400 for a move that is not allowed

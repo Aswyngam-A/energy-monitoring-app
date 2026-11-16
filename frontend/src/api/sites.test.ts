@@ -19,12 +19,17 @@ test('updateSite PUTs the input to /sites/{id} and returns the updated site', as
   expect(site).toEqual({ id: 5, name: 'B', threshold: 20 });
 });
 
-test('listSites GETs the largest page of sites and returns its items', async () => {
-  // Page shape { items, page, size, total } (M7); the client asks for 100 until pagination controls exist.
-  jest.mocked(client.get).mockResolvedValue({
-    data: { items: [{ id: 1, name: 'A', threshold: 10 }], page: 0, size: 100, total: 1 },
-  });
-  const result = await listSites();
-  expect(client.get).toHaveBeenCalledWith('/sites', { params: { size: 100 } });
-  expect(result).toEqual([{ id: 1, name: 'A', threshold: 10 }]);
+test('listSites GETs one page of sites and returns the whole page', async () => {
+  // Page shape { items, page, size, total } (M7).
+  const page = { items: [{ id: 1, name: 'A', threshold: 10 }], page: 1, size: 20, total: 21 };
+  jest.mocked(client.get).mockResolvedValue({ data: page });
+  const result = await listSites(1);
+  expect(client.get).toHaveBeenCalledWith('/sites', { params: { page: 1 } });
+  expect(result).toEqual(page);
+});
+
+test('listSites asks for the first page by default', async () => {
+  jest.mocked(client.get).mockResolvedValue({ data: { items: [], page: 0, size: 20, total: 0 } });
+  await listSites();
+  expect(client.get).toHaveBeenCalledWith('/sites', { params: { page: 0 } });
 });

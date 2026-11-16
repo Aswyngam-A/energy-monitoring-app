@@ -1,59 +1,69 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { listAlerts, updateAlertStatus, type Alert, type AlertStatus } from '../api/alerts';
+import { listAlerts } from '../api/alerts';
 
 /**
- * Shared alerts state. The nav badge (in Layout) and the alerts page both need the same list,
- * so it is loaded here, by a provider placed above both, instead of once per component.
- * Changing an alert's status also goes through here, so both readers update together.
+ * Shared "how many alerts are OPEN" state. The nav badge (in Layout) needs it on every page and the
+ * alerts page changes it, so it lives in a provider above both instead of in either component.
+ *
+ * Only the number is kept here, not the alerts themselves: the list is paginated and filtered, so
+ * the alerts page loads its own page. The number comes from the server's `total` for the OPEN
+ * filter, which is correct however many alerts exist.
  */
 interface AlertsState {
-  alerts: Alert[];
+  openCount: number;
   loading: boolean;
   // Empty string = no error; otherwise a message ready to show.
   error: string;
-  /**
-   * Asks the server to move an alert to a new status, then reloads the list (a refetch rather than
-   * patching local state: simple, and the screen always shows what the server really has).
-   * The promise rejects if the server refuses, so the caller can show a message.
-   */
-  changeStatus: (id: number, status: AlertStatus) => Promise<void>;
+  /** Asks the server again (call it after something changed an alert's status). */
+  refresh: () => Promise<void>;
 }
 
 // null = "no provider above this component"; useAlerts turns that into a clear error.
 const AlertsContext = createContext<AlertsState | null>(null);
 
-/** Loads every alert when it first appears and shares the result with all descendants. */
+/** Loads the count when it first appears and shares it (and a way to refresh it) with all descendants. */
 export function AlertsProvider({ children }: { children: ReactNode }) {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [openCount, setOpenCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    // Guard against updating state after unmount (e.g. a test finishing early).
-    let cancelled = false;
-    listAlerts()
-      .then((data) => { if (!cancelled) setAlerts(data); })
-      .catch(() => { if (!cancelled) setError('Could not load alerts'); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+  // Applies a result to the state (used by the first load and by refresh).
+  const apply = useCallback((count: number | null) => {
+    if (count === null) {
+      setError('Could not load alerts');
+    } else {
+      setOpenCount(count);
+      setError('');
+    }
+    setLoading(false);
   }, []);
 
+  // The smallest page is enough: only its `total` is used. null = the request failed.
+  const fetchOpenCount = (): Promise<number | null> =>
+    listAlerts({ status: 'OPEN', size: 1 }).then((page) => page.total, () => null);
+
+  // First load. State is only set inside the callback (not synchronously in the effect body), and
+  // the flag stops an answer that arrives after unmount from touching the state.
+  useEffect(() => {
+    let cancelled = false;
+    void fetchOpenCount().then((count) => { if (!cancelled) apply(count); });
+    return () => { cancelled = true; };
+  }, [apply]);
+
+  // Asks the server again; the alerts page calls it after changing an alert's status.
   // useCallback keeps the same function between renders, so consumers do not re-render needlessly.
-  const changeStatus = useCallback(async (id: number, status: AlertStatus) => {
-    // Throws on 400/404: the caller handles it, and the list stays as it was.
-    await updateAlertStatus(id, status);
-    // Not touching `loading` here: the page must not flip back to "Loading alerts..." on every click.
-    setAlerts(await listAlerts());
-  }, []);
+  const refresh = useCallback(async () => {
+    apply(await fetchOpenCount());
+  }, [apply]);
 
   return (
-    <AlertsContext.Provider value={{ alerts, loading, error, changeStatus }}>
+    <AlertsContext.Provider value={{ openCount, loading, error, refresh }}>
       {children}
     </AlertsContext.Provider>
   );
 }
 
-/** Read the shared alerts state. Must be used under <AlertsProvider>. */
+/** Read the shared alert count. Must be used under <AlertsProvider>. */
 // eslint-disable-next-line react-refresh/only-export-components -- hook and provider belong together
 export function useAlerts(): AlertsState {
   const state = useContext(AlertsContext);

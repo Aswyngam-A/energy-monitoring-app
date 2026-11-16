@@ -1,4 +1,5 @@
 import client from './client';
+import type { Page } from './page';
 
 // Typed wrappers around the backend's /api/v1/sites endpoints.
 // Each function returns the response body; a non-2xx status makes Axios throw,
@@ -17,12 +18,10 @@ export interface SiteInput {
   threshold: number;
 }
 
-//GET /sites -> a page { items, page, size, total }.
-// TEMPORARY (until M7 step 5 adds pagination controls): ask for the largest page allowed (100)
-// and return only its items.
-export async function listSites(): Promise<Site[]> {
-  const response = await client.get<{ items: Site[] }>('/sites', { params: { size: 100 } });
-  return response.data.items;
+//GET /sites?page= -> one page of sites, newest first: { items, page, size, total } (page is 0-based).
+export async function listSites(page = 0): Promise<Page<Site>> {
+  const response = await client.get<Page<Site>>('/sites', { params: { page } });
+  return response.data;
 }
 
 //GET /sites/{id} -> Site.

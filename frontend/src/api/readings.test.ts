@@ -13,22 +13,21 @@ const reading = {
   sensorName: 'Main meter',
 };
 
-// The backend answers with a page { items, page, size, total } (M7). Until the pagination controls
-// exist (M7 step 5) the client asks for the largest page (100) and returns its items.
-const page = (items: object[]) => ({ items, page: 0, size: 100, total: items.length });
+// The backend answers with a page { items, page, size, total } (M7); the client returns it whole.
+const page = (items: object[]) => ({ items, page: 0, size: 20, total: items.length });
 
-test('listSiteReadings GETs the largest page of the site and returns its items when no range is given', async () => {
+test('listSiteReadings GETs the first page of the site and returns the whole page', async () => {
   jest.mocked(client.get).mockResolvedValue({ data: page([reading]) });
   const result = await listSiteReadings(7);
-  expect(client.get).toHaveBeenCalledWith('/sites/7/readings', { params: { size: 100 } });
-  expect(result).toEqual([reading]);
+  expect(client.get).toHaveBeenCalledWith('/sites/7/readings', { params: { page: 0 } });
+  expect(result).toEqual(page([reading]));
 });
 
-test('listSiteReadings sends from and to as query parameters', async () => {
+test('listSiteReadings sends from, to and the page as query parameters', async () => {
   jest.mocked(client.get).mockResolvedValue({ data: page([]) });
-  await listSiteReadings(7, { from: '2024-05-01T10:00:00Z', to: '2024-05-01T12:00:00Z' });
+  await listSiteReadings(7, { from: '2024-05-01T10:00:00Z', to: '2024-05-01T12:00:00Z' }, 3);
   expect(client.get).toHaveBeenCalledWith('/sites/7/readings', {
-    params: { from: '2024-05-01T10:00:00Z', to: '2024-05-01T12:00:00Z', size: 100 },
+    params: { from: '2024-05-01T10:00:00Z', to: '2024-05-01T12:00:00Z', page: 3 },
   });
 });
 
@@ -36,7 +35,7 @@ test('listSiteReadings leaves out a bound that is missing or blank', async () =>
   jest.mocked(client.get).mockResolvedValue({ data: page([]) });
   await listSiteReadings(7, { from: '2024-05-01T10:00:00Z', to: '' });
   expect(client.get).toHaveBeenCalledWith('/sites/7/readings', {
-    params: { from: '2024-05-01T10:00:00Z', size: 100 },
+    params: { from: '2024-05-01T10:00:00Z', page: 0 },
   });
 });
 

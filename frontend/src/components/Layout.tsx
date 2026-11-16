@@ -3,8 +3,8 @@ import { useAlerts } from '../context/AlertsContext';
 
 /** Page frame shared by every route: title, navigation, and the current page in <Outlet />. */
 export default function Layout() {
-  // Only OPEN alerts count: they are the ones still needing attention.
-  const openCount = useAlerts().alerts.filter((a) => a.status === 'OPEN').length;
+  // The number of OPEN alerts (the ones still needing attention), counted by the server.
+  const { openCount } = useAlerts();
 
   return (
     <div>

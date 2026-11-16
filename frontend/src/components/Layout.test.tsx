@@ -5,13 +5,12 @@ import { MemoryRouter } from 'react-router';
 import Layout from './Layout';
 import { AlertsProvider } from '../context/AlertsContext';
 import * as alertsApi from '../api/alerts';
+import { pageOf } from '../testUtils';
 
 jest.mock('../api/alerts');
 
-const alert = (id: number, status: alertsApi.AlertStatus = 'OPEN'): alertsApi.Alert => ({
-  id, siteId: 7, sensorId: 3, readingId: id, value: 150, threshold: 100,
-  createdAt: '2024-05-01T11:00:00Z', status,
-});
+// The badge shows the `total` of a page of OPEN alerts (the items are not needed).
+const openAlerts = (total: number) => pageOf<alertsApi.Alert>([], { size: 1, total });
 
 function renderLayout() {
   render(
@@ -24,7 +23,7 @@ function renderLayout() {
 }
 
 beforeEach(() => {
-  jest.mocked(alertsApi.listAlerts).mockResolvedValue([]);
+  jest.mocked(alertsApi.listAlerts).mockResolvedValue(openAlerts(0));
 });
 
 test('renders app name', async () => {
@@ -39,32 +38,24 @@ test('has a navigation link to the alerts page', async () => {
   expect(await screen.findByRole('link', { name: /alerts/i })).toHaveAttribute('href', '/alerts');
 });
 
-test('shows the number of alerts as a badge on the Alerts link', async () => {
-  jest.mocked(alertsApi.listAlerts).mockResolvedValue([alert(2), alert(1)]);
+test('shows the number of OPEN alerts as a badge on the Alerts link', async () => {
+  jest.mocked(alertsApi.listAlerts).mockResolvedValue(openAlerts(2));
   renderLayout();
 
   expect(await screen.findByLabelText('2 open alerts')).toHaveTextContent('2');
+  // The server does the counting: only OPEN alerts, asking for the smallest page.
+  expect(alertsApi.listAlerts).toHaveBeenCalledWith({ status: 'OPEN', size: 1 });
 });
 
-test('shows no badge when there are no alerts', async () => {
+test('the badge shows the real total even when it is larger than one page', async () => {
+  jest.mocked(alertsApi.listAlerts).mockResolvedValue(openAlerts(137));
   renderLayout();
-  await screen.findByRole('link', { name: /alerts/i });
-  expect(screen.queryByLabelText(/open alerts/i)).not.toBeInTheDocument();
+
+  expect(await screen.findByLabelText('137 open alerts')).toBeInTheDocument();
 });
 
-test('the badge counts only OPEN alerts, not acknowledged or resolved ones', async () => {
-  jest.mocked(alertsApi.listAlerts).mockResolvedValue([
-    alert(3, 'RESOLVED'), alert(2, 'ACKNOWLEDGED'), alert(1, 'OPEN'),
-  ]);
+test('shows no badge when there are no open alerts', async () => {
   renderLayout();
-
-  expect(await screen.findByLabelText('1 open alerts')).toBeInTheDocument();
-});
-
-test('no badge when every alert is already handled', async () => {
-  jest.mocked(alertsApi.listAlerts).mockResolvedValue([alert(2, 'RESOLVED'), alert(1, 'ACKNOWLEDGED')]);
-  renderLayout();
-
   await screen.findByRole('link', { name: /alerts/i });
   expect(screen.queryByLabelText(/open alerts/i)).not.toBeInTheDocument();
 });

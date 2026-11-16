@@ -1,10 +1,10 @@
-// Tests for the shared alerts state: one load, many readers.
+// Tests for the shared open-alert count: loaded once, shared by every reader, refreshable.
 // The API is mocked; a tiny probe component prints what useAlerts() returns.
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useState } from 'react';
 import { AlertsProvider, useAlerts } from './AlertsContext';
 import * as alertsApi from '../api/alerts';
+import { pageOf } from '../testUtils';
 
 jest.mock('../api/alerts');
 
@@ -13,19 +13,17 @@ beforeEach(() => {
   jest.resetAllMocks();
 });
 
-const alert = (id: number, status: alertsApi.AlertStatus = 'OPEN'): alertsApi.Alert => ({
-  id, siteId: 7, sensorId: 3, readingId: id, value: 150, threshold: 100,
-  createdAt: '2024-05-01T11:00:00Z', status,
-});
+// The count is the `total` of a page of OPEN alerts; the items themselves are not needed.
+const openTotal = (total: number) => pageOf<alertsApi.Alert>([], { size: 1, total });
 
-// Prints loading / error / the number of alerts so the tests can assert on plain text.
+// Prints the count (or the error) so the tests can assert on plain text.
 function Probe({ name }: { name: string }) {
-  const { alerts, loading, error } = useAlerts();
-  return <p>{`${name}: ${loading ? 'loading' : error || alerts.length}`}</p>;
+  const { openCount, error } = useAlerts();
+  return <p>{`${name}: ${error || openCount}`}</p>;
 }
 
-test('loads the alerts once and shares them with every reader', async () => {
-  jest.mocked(alertsApi.listAlerts).mockResolvedValue([alert(2), alert(1)]);
+test('asks the server for the number of OPEN alerts, once, and shares it with every reader', async () => {
+  jest.mocked(alertsApi.listAlerts).mockResolvedValue(openTotal(7));
   render(
     <AlertsProvider>
       <Probe name="a" />
@@ -33,10 +31,11 @@ test('loads the alerts once and shares them with every reader', async () => {
     </AlertsProvider>
   );
 
-  expect(await screen.findByText('a: 2')).toBeInTheDocument();
-  expect(screen.getByText('b: 2')).toBeInTheDocument();
-  // Two readers, still a single request.
+  expect(await screen.findByText('a: 7')).toBeInTheDocument();
+  expect(screen.getByText('b: 7')).toBeInTheDocument();
+  // Only the total matters, so the smallest page is requested. Two readers, a single request.
   expect(alertsApi.listAlerts).toHaveBeenCalledTimes(1);
+  expect(alertsApi.listAlerts).toHaveBeenCalledWith({ status: 'OPEN', size: 1 });
 });
 
 test('exposes an error message when loading fails', async () => {
@@ -46,50 +45,31 @@ test('exposes an error message when loading fails', async () => {
   expect(await screen.findByText('a: Could not load alerts')).toBeInTheDocument();
 });
 
+test('refresh asks again, so a change made elsewhere shows up in every reader', async () => {
+  jest.mocked(alertsApi.listAlerts)
+    .mockResolvedValueOnce(openTotal(2))
+    .mockResolvedValueOnce(openTotal(1));
+  function RefreshProbe() {
+    const { openCount, refresh } = useAlerts();
+    return (
+      <div>
+        <p>{`open: ${openCount}`}</p>
+        <button onClick={() => { void refresh(); }}>refresh</button>
+      </div>
+    );
+  }
+  render(<AlertsProvider><RefreshProbe /></AlertsProvider>);
+  await screen.findByText('open: 2');
+
+  await userEvent.click(screen.getByRole('button', { name: 'refresh' }));
+
+  expect(await screen.findByText('open: 1')).toBeInTheDocument();
+  expect(alertsApi.listAlerts).toHaveBeenCalledTimes(2);
+});
+
 test('useAlerts outside a provider is a programming error', () => {
   // React logs the thrown error; silence it so the test output stays readable.
   const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
   expect(() => render(<Probe name="a" />)).toThrow(/AlertsProvider/);
   spy.mockRestore();
-});
-
-// Probe with a button that asks the provider to change alert 1's status.
-function ChangeProbe() {
-  const { alerts, changeStatus } = useAlerts();
-  const [failed, setFailed] = useState(false);
-  return (
-    <div>
-      <p>{`statuses: ${alerts.map((a) => a.status).join(',')}`}</p>
-      {failed && <p>change failed</p>}
-      <button onClick={() => { changeStatus(1, 'ACKNOWLEDGED').catch(() => { setFailed(true); }); }}>change</button>
-    </div>
-  );
-}
-
-test('changeStatus sends the change, then reloads the list so every reader sees it', async () => {
-  jest.mocked(alertsApi.listAlerts)
-    .mockResolvedValueOnce([alert(1)])
-    .mockResolvedValueOnce([alert(1, 'ACKNOWLEDGED')]);
-  jest.mocked(alertsApi.updateAlertStatus).mockResolvedValue(alert(1, 'ACKNOWLEDGED'));
-  render(<AlertsProvider><ChangeProbe /></AlertsProvider>);
-  await screen.findByText('statuses: OPEN');
-
-  await userEvent.click(screen.getByRole('button', { name: 'change' }));
-
-  expect(await screen.findByText('statuses: ACKNOWLEDGED')).toBeInTheDocument();
-  expect(alertsApi.updateAlertStatus).toHaveBeenCalledWith(1, 'ACKNOWLEDGED');
-  expect(alertsApi.listAlerts).toHaveBeenCalledTimes(2);
-});
-
-test('changeStatus rejects when the server refuses, and keeps the old list', async () => {
-  jest.mocked(alertsApi.listAlerts).mockResolvedValue([alert(1)]);
-  jest.mocked(alertsApi.updateAlertStatus).mockRejectedValue(new Error('400'));
-  render(<AlertsProvider><ChangeProbe /></AlertsProvider>);
-  await screen.findByText('statuses: OPEN');
-
-  await userEvent.click(screen.getByRole('button', { name: 'change' }));
-
-  expect(await screen.findByText('change failed')).toBeInTheDocument();
-  expect(screen.getByText('statuses: OPEN')).toBeInTheDocument();
-  expect(alertsApi.listAlerts).toHaveBeenCalledTimes(1);
 });

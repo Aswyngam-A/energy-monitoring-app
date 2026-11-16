@@ -1,15 +1,18 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { listSiteReadings, type Reading, type ReadingRange } from '../api/readings';
+import type { Page } from '../api/page';
+import Pagination from './Pagination';
 import { formatTimestamp, utcInputToIso } from '../utils/dates';
 
 /**
  * The "Readings" part of the site detail page: a table of the readings of all the site's sensors
- * (newest first, as the API returns them) with an optional from/to filter.
+ * (newest first, as the API returns them), one page at a time, with an optional from/to filter.
  * All times are UTC: both what is shown and what is typed in the filter.
  */
 export default function ReadingsSection({ siteId }: { siteId: number }) {
   const [loading, setLoading] = useState(true);
-  const [readings, setReadings] = useState<Reading[]>([]);
+  const [result, setResult] = useState<Page<Reading> | null>(null);
+  const [page, setPage] = useState(0); // 0-based, as in the API
   const [error, setError] = useState('');
 
   // What the user has typed in the two inputs (datetime-local strings, "" = empty).
@@ -21,17 +24,19 @@ export default function ReadingsSection({ siteId }: { siteId: number }) {
   // The filter that was actually applied. Changing it (a new object) re-runs the load effect.
   const [range, setRange] = useState<ReadingRange>({});
 
-  // Load on mount, and again whenever the site or the applied range changes.
+  // Load on mount, and again whenever the site, the applied range or the page changes.
   useEffect(() => {
     // If the site or range changes (or the component unmounts) before a request answers, the old
     // answer must not overwrite the newer one: the cleanup below flips this flag.
     let cancelled = false;
-    listSiteReadings(siteId, range)
-      .then((data) => { if (!cancelled) setReadings(data); })
+    listSiteReadings(siteId, range, page)
+      .then((data) => { if (!cancelled) setResult(data); })
       .catch(() => { if (!cancelled) setError('Could not load readings'); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [siteId, range]);
+  }, [siteId, range, page]);
+
+  const readings = result?.items ?? [];
 
   /** Applies the typed range after checking it, then lets the effect reload. */
   function handleApply(event: FormEvent<HTMLFormElement>) {
@@ -53,6 +58,8 @@ export default function ReadingsSection({ siteId }: { siteId: number }) {
     }
 
     startLoading();
+    // A page number from the old result set makes no sense for the new one.
+    setPage(0);
     // Only include the bounds that have a value.
     setRange({ ...(from ? { from } : {}), ...(to ? { to } : {}) });
   }
@@ -63,7 +70,14 @@ export default function ReadingsSection({ siteId }: { siteId: number }) {
     setToInput('');
     setFilterError('');
     startLoading();
+    setPage(0);
     setRange({});
+  }
+
+  /** Moves to another page of the same result set. */
+  function handlePageChange(next: number) {
+    startLoading();
+    setPage(next);
   }
 
   /** Shows the loading text again while a new filter loads, and drops the previous error. */
@@ -118,6 +132,9 @@ export default function ReadingsSection({ siteId }: { siteId: number }) {
             ))}
           </tbody>
         </table>
+      )}
+      {!loading && !error && result && (
+        <Pagination page={page} size={result.size} total={result.total} onPageChange={handlePageChange} />
       )}
     </section>
   );

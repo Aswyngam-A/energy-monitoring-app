@@ -2,6 +2,7 @@
 // we only check which URL and query parameters it sends and what it returns.
 import client from './client';
 import { listAlerts, updateAlertStatus } from './alerts';
+import { pageOf } from '../testUtils';
 
 jest.mock('./client');
 
@@ -16,21 +17,24 @@ const alert = {
   status: 'OPEN',
 };
 
-// The backend now answers with a page: { items, page, size, total } (M7). Until the pagination
-// controls exist (M7 step 5) the client asks for the largest page (100) and returns its items.
-const page = (items: object[]) => ({ items, page: 0, size: 100, total: items.length });
-
-test('listAlerts GETs /alerts asking for the largest page and returns its items', async () => {
-  jest.mocked(client.get).mockResolvedValue({ data: page([alert]) });
+test('listAlerts GETs /alerts without query parameters and returns the whole page', async () => {
+  const page = pageOf([alert], { total: 41 });
+  jest.mocked(client.get).mockResolvedValue({ data: page });
   const result = await listAlerts();
-  expect(client.get).toHaveBeenCalledWith('/alerts', { params: { size: 100 } });
-  expect(result).toEqual([alert]);
+  expect(client.get).toHaveBeenCalledWith('/alerts', { params: {} });
+  // The page object (items + paging metadata) is returned as is, for the pagination controls.
+  expect(result).toEqual(page);
 });
 
-test('listAlerts sends siteId as a query parameter to keep one site', async () => {
-  jest.mocked(client.get).mockResolvedValue({ data: page([]) });
-  await listAlerts(7);
-  expect(client.get).toHaveBeenCalledWith('/alerts', { params: { siteId: 7, size: 100 } });
+test('listAlerts sends only the query values that are given', async () => {
+  jest.mocked(client.get).mockResolvedValue({ data: pageOf([]) });
+  await listAlerts({ siteId: 7, status: 'OPEN', page: 2, size: 5 });
+  expect(client.get).toHaveBeenCalledWith('/alerts', {
+    params: { siteId: 7, status: 'OPEN', page: 2, size: 5 },
+  });
+
+  await listAlerts({ status: 'RESOLVED' });
+  expect(client.get).toHaveBeenLastCalledWith('/alerts', { params: { status: 'RESOLVED' } });
 });
 
 test('updateAlertStatus PATCHes the status to /alerts/{id} and returns the updated alert', async () => {

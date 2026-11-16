@@ -1,4 +1,5 @@
 import client from './client';
+import type { Page } from './page';
 
 // Typed wrappers around the backend's reading endpoints.
 // Each function returns the response body; a non-2xx status makes Axios throw,
@@ -30,15 +31,19 @@ export interface ReadingRange {
 }
 
 // GET /sites/{siteId}/readings?from=&to= -> readings of every sensor of the site, newest first
-// The backend returns a page { items, page, size, total }. TEMPORARY (until M7 step 5 adds pagination
-// controls): ask for the largest page allowed (100) and return only its items.
-export async function listSiteReadings(siteId: number, range: ReadingRange = {}): Promise<Reading[]> {
+// GET /sites/{siteId}/readings -> one page of readings, newest first: { items, page, size, total }.
+// `range` narrows by time; `page` is 0-based.
+export async function listSiteReadings(
+  siteId: number,
+  range: ReadingRange = {},
+  page = 0,
+): Promise<Page<Reading>> {
   // Only send the bounds that have a value: an empty "from=" would be a malformed date (400).
-  const params: ReadingRange & { size: number } = { size: 100 };
+  const params: ReadingRange & { page: number } = { page };
   if (range.from) params.from = range.from;
   if (range.to) params.to = range.to;
-  const response = await client.get<{ items: Reading[] }>(`/sites/${siteId}/readings`, { params });
-  return response.data.items;
+  const response = await client.get<Page<Reading>>(`/sites/${siteId}/readings`, { params });
+  return response.data;
 }
 
 // POST /sensors/{sensorId}/readings -> the created Reading
