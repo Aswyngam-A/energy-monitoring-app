@@ -11,3 +11,12 @@ test('renders app name', () => {
   );
   expect(screen.getByText('EnergyWatch')).toBeInTheDocument();
 });
+
+test('has a navigation link to the alerts page', () => {
+  render(
+    <MemoryRouter>
+      <Layout />
+    </MemoryRouter>
+  );
+  expect(screen.getByRole('link', { name: /alerts/i })).toHaveAttribute('href', '/alerts');
+});

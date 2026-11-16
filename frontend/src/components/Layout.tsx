@@ -9,6 +9,7 @@ export default function Layout() {
         <nav>
           <NavLink to="/">Home</NavLink>
           <NavLink to="/sites">Sites</NavLink>
+          <NavLink to="/alerts">Alerts</NavLink>
         </nav>
       </header>
       <main>
