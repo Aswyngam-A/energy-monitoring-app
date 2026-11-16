@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { listAlerts, type Alert } from '../api/alerts';
+import { useAlerts } from '../context/AlertsContext';
 import { formatTimestamp } from '../utils/dates';
 
 /**
@@ -8,17 +7,8 @@ import { formatTimestamp } from '../utils/dates';
  * a link to the site, the sensor, the value that exceeded the threshold, and the status.
  */
 export default function AlertsPage() {
-  const [loading, setLoading] = useState(true);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [error, setError] = useState('');
-
-  // Load the list once, when the page first appears.
-  useEffect(() => {
-    listAlerts()
-      .then((data) => { setAlerts(data); })
-      .catch(() => { setError('Could not load alerts'); })
-      .finally(() => { setLoading(false); });
-  }, []);
+  // The list comes from the shared provider (the nav badge uses the same data).
+  const { alerts, loading, error } = useAlerts();
 
   // Early returns: one page state at a time (loading, error, or the real content below).
   if (loading) return <p>Loading alerts...</p>;

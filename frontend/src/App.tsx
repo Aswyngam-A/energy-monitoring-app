@@ -8,10 +8,13 @@ import SiteDetailPage from './pages/SiteDetailPage';
 import SiteNewPage from './pages/SiteNewPage';
 import SiteEditPage from './pages/SiteEditPage';
 import AlertsPage from './pages/AlertsPage';
+import { AlertsProvider } from './context/AlertsContext';
 
 /** The route table: which page shows for which URL. All routes share the Layout frame. */
 function App() {
   return (
+    // The provider sits above the routes so the nav badge and the alerts page share one load.
+    <AlertsProvider>
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
@@ -25,6 +28,7 @@ function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
+    </AlertsProvider>
   )
 }
 export default App

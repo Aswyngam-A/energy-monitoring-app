@@ -1,8 +1,10 @@
 // Tests for /alerts: the table, the empty state, the error alert and the links to sites.
-// The API is mocked; MemoryRouter is needed because the page renders <Link>s.
+// The API is mocked; MemoryRouter is needed because the page renders <Link>s, and the page
+// reads its data from the shared AlertsProvider.
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import AlertsPage from './AlertsPage';
+import { AlertsProvider } from '../context/AlertsContext';
 import * as alertsApi from '../api/alerts';
 
 jest.mock('../api/alerts');
@@ -21,7 +23,9 @@ const alerts: alertsApi.Alert[] = [
 function renderPage() {
   render(
     <MemoryRouter>
-      <AlertsPage />
+      <AlertsProvider>
+        <AlertsPage />
+      </AlertsProvider>
     </MemoryRouter>
   );
 }
