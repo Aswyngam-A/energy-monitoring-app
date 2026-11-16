@@ -98,4 +98,11 @@
 
 ## Known issues / blocked
 - ~~Site readings list unbounded~~ → fixed in M7 (sites, readings and alerts are paginated).
-- Remaining ideas, none blocking: the alerts page shows site/sensor ids, not names; the nav badge and the dashboard load once per page view (no polling or live updates); the chart has a fixed size (not responsive); e2e tests never clean up their data (unique names instead), so a long-lived dev database grows; the summary endpoint is not paginated (one small line per site); GitHub Actions uses Node 20-based actions and `ubuntu-latest` moves to Ubuntu 26 on 2026-10-19 (check the workflow); no authentication (decided in M3).
+- **Polish backlog** (none blocking; agreed 2026-11-16, in this order):
+  1. Alerts page shows site and sensor names instead of ids.
+  2. Dashboard chart is responsive instead of a fixed 600 px.
+  3. Live refresh: poll the nav badge, the alerts list and the dashboard (~30 s).
+  4. Paginate `GET /dashboard/summary` (`{ items, page, size, total }` like the other lists) and add paging controls to the dashboard cards; the chart's site select then needs another source for the site list.
+  5. CI housekeeping: Node 20-based Actions, and `ubuntu-latest` moves to Ubuntu 26 on 2026-10-19.
+  6. e2e data cleanup so a long-lived dev database does not grow (needs a test-only way to delete data: ask first).
+- Out of scope: authentication (decided in M3).
