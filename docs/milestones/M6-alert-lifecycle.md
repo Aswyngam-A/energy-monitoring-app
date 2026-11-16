@@ -1,6 +1,6 @@
 # M6 — Alert lifecycle
 
-**Status:** In progress
+**Status:** Done
 
 ## Goal
 Alerts can be acknowledged and resolved, filtered by status, and repeated breaches don't flood the list.
@@ -40,3 +40,4 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 - 2026-11-16 — Step 3 done: dedup per sensor in AlertService, 4 new ingestion tests replacing the pre-M6 one; all checks green (96 unit + 2 IT, 77 frontend, 16 e2e).
 - 2026-11-16 — Step 4 done: GET /alerts?status= (combines with siteId), 5 tests; all checks green (101 unit + 2 IT, 77 frontend, 16 e2e). Backend complete.
 - 2026-11-16 — Step 5 done: updateAlertStatus, changeStatus with refetch in the provider, status filter (client-side) and Acknowledge/Resolve buttons; 12 new tests; all checks green (101 unit + 2 IT, 87 frontend, 16 e2e).
+- 2026-11-16 — Step 6 done: e2e `alert-lifecycle.spec.ts` (4 tests); all checks green (101 unit + 2 IT, 87 frontend, 20 e2e). **M6 done.**
