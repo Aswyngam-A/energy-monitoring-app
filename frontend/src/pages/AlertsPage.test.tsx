@@ -1,7 +1,7 @@
 // Tests for /alerts: the table, the status filter, the paging controls, the Acknowledge / Resolve
 // buttons and the error states. The API is mocked; MemoryRouter is needed because the page renders
 // <Link>s, and AlertsProvider because the page tells it to refresh the nav badge after a change.
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import AlertsPage from './AlertsPage';
@@ -198,4 +198,26 @@ test('shows a loading status while the alerts are being fetched', async () => {
   renderPage();
 
   expect(screen.getByRole('status')).toHaveTextContent('Loading alerts...');
+});
+
+// ---- Polish 3: live refresh ----
+
+test('reloads the current page and filter every 30 seconds, without showing the loading state again', async () => {
+  jest.useFakeTimers();
+  try {
+    mockApi(() => [alert(1, 'OPEN')]);
+    renderPage();
+    await screen.findAllByRole('row');
+    expect(pageCalls()).toHaveLength(1);
+
+    await act(async () => { jest.advanceTimersByTime(30_000); });
+
+    expect(pageCalls()).toHaveLength(2);
+    expect(pageCalls()[1][0]).toEqual({ page: 0 });
+    // The table stayed on screen: a background refresh must not flash "Loading alerts...".
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('row')).toHaveLength(2);
+  } finally {
+    jest.useRealTimers();
+  }
 });

@@ -4,6 +4,7 @@ import { listAlerts, updateAlertStatus, type Alert, type AlertStatus } from '../
 import type { Page } from '../api/page';
 import Pagination from '../components/Pagination';
 import { useAlerts } from '../context/AlertsContext';
+import { usePolling } from '../hooks/usePolling';
 import { formatTimestamp } from '../utils/dates';
 import LoadingState from '../components/LoadingState';
 import ErrorMessage from '../components/ErrorMessage';
@@ -48,6 +49,10 @@ export default function AlertsPage() {
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [filter, page, reloads]);
+
+  // Live refresh: every 30 seconds the current page and filter are loaded again. `loading` is not
+  // set again, so the table stays on screen and only its content changes.
+  usePolling(() => { setReloads((n) => n + 1); });
 
   function handleFilterChange(next: StatusFilter) {
     setFilter(next);

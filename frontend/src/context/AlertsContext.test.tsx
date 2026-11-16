@@ -1,6 +1,6 @@
 // Tests for the shared open-alert count: loaded once, shared by every reader, refreshable.
 // The API is mocked; a tiny probe component prints what useAlerts() returns.
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AlertsProvider, useAlerts } from './AlertsContext';
 import * as alertsApi from '../api/alerts';
@@ -72,4 +72,37 @@ test('useAlerts outside a provider is a programming error', () => {
   const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
   expect(() => render(<Probe name="a" />)).toThrow(/AlertsProvider/);
   spy.mockRestore();
+});
+
+// ---- Polish 3: live refresh ----
+
+describe('polling', () => {
+  beforeEach(() => { jest.useFakeTimers(); });
+  afterEach(() => { jest.useRealTimers(); });
+
+  test('asks the server again every 30 seconds, so the badge follows alerts raised elsewhere', async () => {
+    jest.mocked(alertsApi.listAlerts)
+      .mockResolvedValueOnce(openTotal(1))
+      .mockResolvedValueOnce(openTotal(4));
+    render(<AlertsProvider><Probe name="a" /></AlertsProvider>);
+    expect(await screen.findByText('a: 1')).toBeInTheDocument();
+
+    await act(async () => { jest.advanceTimersByTime(30_000); });
+
+    expect(await screen.findByText('a: 4')).toBeInTheDocument();
+    expect(alertsApi.listAlerts).toHaveBeenCalledTimes(2);
+  });
+
+  test('a failed poll keeps the last known count instead of showing an error', async () => {
+    jest.mocked(alertsApi.listAlerts)
+      .mockResolvedValueOnce(openTotal(3))
+      .mockRejectedValueOnce(new Error('500'));
+    render(<AlertsProvider><Probe name="a" /></AlertsProvider>);
+    expect(await screen.findByText('a: 3')).toBeInTheDocument();
+
+    await act(async () => { jest.advanceTimersByTime(30_000); });
+
+    expect(alertsApi.listAlerts).toHaveBeenCalledTimes(2);
+    expect(screen.getByText('a: 3')).toBeInTheDocument();
+  });
 });

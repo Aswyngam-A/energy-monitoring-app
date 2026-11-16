@@ -79,3 +79,19 @@ test('the alert links to its site page', async ({ page, request }) => {
 
   await expect(page).toHaveURL(`/sites/${siteId}`);
 });
+
+// Polish 3: the alerts page refreshes itself every 30 seconds. Playwright's fake clock lets the
+// test "wait" 30 seconds instantly instead of really sleeping.
+test('an alert raised while the alerts page is open appears after the next refresh', async ({ page, request }) => {
+  const { siteName, sensorId } = await createSiteWithSensor(request);
+  await page.clock.install();
+  await page.goto('/alerts');
+  await expect(page.getByRole('heading', { name: 'Alerts' })).toBeVisible();
+  await expect(page.getByRole('link', { name: siteName, exact: true })).toHaveCount(0);
+
+  // The alert is created behind the page's back, over the API.
+  await postJson(request, `/api/v1/sensors/${sensorId}/readings`, { value: 400 });
+  await page.clock.runFor(30_000);
+
+  await expect(page.getByRole('link', { name: siteName, exact: true })).toBeVisible();
+});

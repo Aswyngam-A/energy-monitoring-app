@@ -99,13 +99,14 @@
 ## Polish log
 - **Polish 1, alert names** (2026-11-16): `AlertResponse` gained `siteName` and `sensorName`; `AlertResource.list` preloads the sites and sensors of the page with two IN queries (no N+1). The alerts page shows the site name (link to `/sites/<id>`) and the sensor name. Decision: the link text changed from "Site <id>" to the site name, so the old unit test and the e2e row lookups ("Site <id>") were replaced by name-based ones (same behaviour checked, new rule). Checks: backend 137 unit + 2 IT, frontend 115, Playwright 23, all green.
 - **Polish 2, responsive chart** (2026-11-16): `ReadingsChart` now uses Recharts' `ResponsiveContainer` (width 100%, height 260), so it follows its parent. jsdom has no layout (every element measures 0) and no `ResizeObserver`, so `jest.setup.ts` got a do-nothing `ResizeObserver` stub and the chart tests fake `getBoundingClientRect` (600 x 260). New test: the chart sits in a responsive container filling the width (red first). The earlier note "fixed size because untestable" no longer holds. Checks: backend 137 + 2 IT, frontend 116, Playwright 23 (twice), all green.
+- **Polish 3, live refresh** (2026-11-16): new `hooks/usePolling` (`POLL_INTERVAL_MS` = 30 s; skips ticks while the tab is hidden; keeps the latest callback in a ref so the timer is not restarted; cleared on unmount). Used by `AlertsProvider` (badge; a failed poll keeps the last count), `AlertsPage` (bumps the reload counter, no loading flash) and `DashboardPage` (summary and chart reload; a failed refresh keeps the data on screen, only a failed first load shows an error). Tests (red first): hook (5, fake timers), context (2), alerts page (1), dashboard (2); e2e: an alert created over the API appears on the open alerts page after `page.clock.runFor(30000)`. Checks: backend 137 + 2 IT, frontend 126, Playwright 24 (twice), all green.
 
 ## Known issues / blocked
 - ~~Site readings list unbounded~~ → fixed in M7 (sites, readings and alerts are paginated).
 - **Polish backlog** (none blocking; agreed 2026-11-16, in this order):
   1. ~~Alerts page shows site and sensor names instead of ids.~~ Done 2026-11-16.
   2. ~~Dashboard chart is responsive instead of a fixed 600 px.~~ Done 2026-11-16.
-  3. Live refresh: poll the nav badge, the alerts list and the dashboard (~30 s).
+  3. ~~Live refresh: poll the nav badge, the alerts list and the dashboard (~30 s).~~ Done 2026-11-16.
   4. Paginate `GET /dashboard/summary` (`{ items, page, size, total }` like the other lists) and add paging controls to the dashboard cards; the chart's site select then needs another source for the site list.
   5. CI housekeeping: Node 20-based Actions, and `ubuntu-latest` moves to Ubuntu 26 on 2026-10-19.
   6. e2e data cleanup so a long-lived dev database does not grow (needs a test-only way to delete data: ask first).

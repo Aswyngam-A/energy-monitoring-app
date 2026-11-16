@@ -1,7 +1,7 @@
 // Tests for /dashboard: one card per site (latest reading, open alerts), a chart of the selected
 // site's recent readings, and the loading / error / empty states. The API modules are mocked and
 // the chart is stubbed (it has its own tests), so these tests are about the page's behaviour.
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import DashboardPage from './DashboardPage';
@@ -106,4 +106,48 @@ test('says so when the chart readings cannot be loaded, without hiding the cards
 
   expect(await screen.findByRole('alert')).toHaveTextContent(/could not load readings/i);
   expect(screen.getByRole('heading', { name: 'Alpha' })).toBeInTheDocument();
+});
+
+// ---- Polish 3: live refresh ----
+
+test('refreshes the cards and the chart every 30 seconds without a loading flash', async () => {
+  jest.useFakeTimers();
+  try {
+    jest.mocked(dashboardApi.getDashboardSummary)
+      .mockResolvedValueOnce(summary)
+      .mockResolvedValueOnce([{ ...summary[0], openAlerts: 5 }, summary[1]]);
+    jest.mocked(readingsApi.listSiteReadings).mockResolvedValue(pageOf(readings));
+    renderPage();
+    expect(await screen.findByText('2 open alerts')).toBeInTheDocument();
+
+    await act(async () => { jest.advanceTimersByTime(30_000); });
+
+    expect(await screen.findByText('5 open alerts')).toBeInTheDocument();
+    expect(dashboardApi.getDashboardSummary).toHaveBeenCalledTimes(2);
+    // The chart's readings are asked for again too.
+    expect(readingsApi.listSiteReadings).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+test('a failed refresh keeps showing the data already on screen', async () => {
+  jest.useFakeTimers();
+  try {
+    jest.mocked(dashboardApi.getDashboardSummary)
+      .mockResolvedValueOnce(summary)
+      .mockRejectedValueOnce(new Error('500'));
+    jest.mocked(readingsApi.listSiteReadings).mockResolvedValue(pageOf(readings));
+    renderPage();
+    expect(await screen.findByText('2 open alerts')).toBeInTheDocument();
+
+    await act(async () => { jest.advanceTimersByTime(30_000); });
+
+    expect(dashboardApi.getDashboardSummary).toHaveBeenCalledTimes(2);
+    expect(screen.getByText('2 open alerts')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  } finally {
+    jest.useRealTimers();
+  }
 });

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { listAlerts } from '../api/alerts';
+import { usePolling } from '../hooks/usePolling';
 
 /**
  * Shared "how many alerts are OPEN" state. The nav badge (in Layout) needs it on every page and the
@@ -21,7 +22,10 @@ interface AlertsState {
 // null = "no provider above this component"; useAlerts turns that into a clear error.
 const AlertsContext = createContext<AlertsState | null>(null);
 
-/** Loads the count when it first appears and shares it (and a way to refresh it) with all descendants. */
+/**
+ * Loads the count when it first appears, refreshes it every 30 seconds (so the badge follows alerts
+ * raised by other sensors or users), and shares it (and a way to refresh it) with all descendants.
+ */
 export function AlertsProvider({ children }: { children: ReactNode }) {
   const [openCount, setOpenCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -55,6 +59,12 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     apply(await fetchOpenCount());
   }, [apply]);
+
+  // Background refresh. A failed poll is ignored (the last known count stays on screen): a passing
+  // network hiccup should not turn the badge into an error message.
+  usePolling(() => {
+    void fetchOpenCount().then((count) => { if (count !== null) apply(count); });
+  });
 
   return (
     <AlertsContext.Provider value={{ openCount, loading, error, refresh }}>
