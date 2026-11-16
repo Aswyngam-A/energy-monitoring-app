@@ -16,3 +16,11 @@ test('shows error when getHealth rejects', async () => {
   render(<HomePage />);
   expect(await screen.findByRole('alert')).toBeInTheDocument();
 });
+
+// ---- UI design pass: Home is the system-status screen ----
+test('has a System status heading and says what the app does', async () => {
+  render(<HomePage />);
+
+  expect(await screen.findByRole('heading', { name: 'System status' })).toBeInTheDocument();
+  expect(screen.getByText(/raises an alert/i)).toBeInTheDocument();
+});

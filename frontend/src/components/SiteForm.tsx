@@ -64,8 +64,8 @@ export default function SiteForm({ initialValues, submitLabel, onSubmit }: SiteF
 
   return (
     // noValidate turns off the browser's own validation bubbles, so our messages are the only ones.
-    <form onSubmit={handleSubmit} noValidate>
-      <div>
+    <form onSubmit={handleSubmit} noValidate className="form">
+      <div className="field">
         {/* htmlFor/id link the label to the input: needed for accessibility and for tests (getByLabelText). */}
         <label htmlFor="site-name">Name</label>
         <input
@@ -74,9 +74,9 @@ export default function SiteForm({ initialValues, submitLabel, onSubmit }: SiteF
           onChange={(e) => { setName(e.target.value); }}
           aria-invalid={nameError !== ''}
         />
-        {nameError && <p>{nameError}</p>}
+        {nameError && <p className="field-error">{nameError}</p>}
       </div>
-      <div>
+      <div className="field">
         <label htmlFor="site-threshold">Threshold</label>
         {/* step="any" allows decimals such as 12.5 */}
         <input
@@ -87,7 +87,7 @@ export default function SiteForm({ initialValues, submitLabel, onSubmit }: SiteF
           onChange={(e) => { setThreshold(e.target.value); }}
           aria-invalid={thresholdError !== ''}
         />
-        {thresholdError && <p>{thresholdError}</p>}
+        {thresholdError && <p className="field-error">{thresholdError}</p>}
       </div>
       {/* ErrorMessage renders nothing while submitError is empty. */}
       <ErrorMessage message={submitError} />

@@ -89,10 +89,10 @@ export default function ReadingsSection({ siteId }: { siteId: number }) {
   }
 
   return (
-    <section>
+    <section className="block">
       <h3>Readings</h3>
       {/* noValidate: our own messages are the only ones shown. */}
-      <form onSubmit={handleApply} noValidate>
+      <form onSubmit={handleApply} noValidate className="filter-form">
         <label htmlFor="readings-from">From (UTC)</label>
         <input
           id="readings-from"
@@ -109,31 +109,31 @@ export default function ReadingsSection({ siteId }: { siteId: number }) {
         />
         <button type="submit">Apply filter</button>
         <button type="button" onClick={handleClear}>Clear</button>
-        {filterError && <p>{filterError}</p>}
+        {filterError && <p className="field-error">{filterError}</p>}
       </form>
 
       {loading && <LoadingState label="readings" />}
       <ErrorMessage message={error} />
-      {!loading && !error && readings.length === 0 && <p>No readings found</p>}
+      {!loading && !error && readings.length === 0 && <p className="empty">No readings found</p>}
       {!loading && readings.length > 0 && (
-        <table>
+        <div className="table-wrap"><table className="ledger">
           <thead>
             <tr>
               <th>Time (UTC)</th>
               <th>Sensor</th>
-              <th>Value (kW)</th>
+              <th className="num">Value (kW)</th>
             </tr>
           </thead>
           <tbody>
             {readings.map((reading) => (
               <tr key={reading.id}>
-                <td>{formatTimestamp(reading.timestamp)}</td>
+                <td className="mono">{formatTimestamp(reading.timestamp)}</td>
                 <td>{reading.sensorName}</td>
-                <td>{reading.value}</td>
+                <td className="num mono">{reading.value}</td>
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
       {!loading && !error && result && (
         <Pagination page={page} size={result.size} total={result.total} onPageChange={handlePageChange} />

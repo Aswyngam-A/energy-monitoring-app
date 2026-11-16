@@ -34,18 +34,20 @@ export default function SitesListPage() {
   const sites = result?.items ?? [];
 
   return (
-    <section>
-      <h2>Sites</h2>
-      {/* Shown in every state with data, including when the list is empty. */}
-      <Link to="/sites/new">New site</Link>
+    <section className="page">
+      <div className="section-head">
+        <h2>Sites</h2>
+        {/* Shown in every state with data, including when the list is empty. */}
+        <Link to="/sites/new" className="button-link primary">New site</Link>
+      </div>
       {sites.length === 0 ? (
-        <p>No sites yet</p>
+        <p className="empty">No sites yet</p>
       ) : (
-        <ul>
+        <ul className="rows">
           {sites.map((site) => (
             <li key={site.id}>
               <Link to={`/sites/${site.id}`}>{site.name}</Link>
-              {' — '}{site.threshold}
+              <span className="row-meta"><small>Threshold</small> <span className="mono">{site.threshold}</span></span>
             </li>
           ))}
         </ul>

@@ -15,7 +15,7 @@ export default function SiteNewPage() {
   }
 
   return (
-    <section>
+    <section className="page">
       <h2>New site</h2>
       <SiteForm submitLabel="Create site" onSubmit={handleSubmit} />
     </section>

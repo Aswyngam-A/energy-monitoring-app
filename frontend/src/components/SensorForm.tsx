@@ -55,8 +55,8 @@ export default function SensorForm({ onSubmit }: SensorFormProps) {
 
   return (
     // noValidate turns off the browser's own validation bubbles, so our messages are the only ones.
-    <form onSubmit={handleSubmit} noValidate>
-      <div>
+    <form onSubmit={handleSubmit} noValidate className="form">
+      <div className="field">
         {/* htmlFor/id link each label to its input (accessibility, and getByLabelText in tests). */}
         <label htmlFor="sensor-name">Name</label>
         <input
@@ -65,9 +65,9 @@ export default function SensorForm({ onSubmit }: SensorFormProps) {
           onChange={(e) => { setName(e.target.value); }}
           aria-invalid={nameError !== ''}
         />
-        {nameError && <p>{nameError}</p>}
+        {nameError && <p className="field-error">{nameError}</p>}
       </div>
-      <div>
+      <div className="field">
         <label htmlFor="sensor-type">Type (optional)</label>
         <input
           id="sensor-type"

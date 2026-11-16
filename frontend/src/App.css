@@ -147,3 +147,38 @@ input[aria-invalid='true'] { border-color: var(--danger); }
 .chip[data-status='OPEN'] { --chip-ink: var(--open); --chip-wash: var(--open-wash); }
 .chip[data-status='ACKNOWLEDGED'] { --chip-ink: var(--ack); --chip-wash: var(--ack-wash); }
 .chip[data-status='RESOLVED'] { --chip-ink: var(--done); --chip-wash: var(--done-wash); }
+
+/* ============ Sites ============ */
+/* A "button" that is really a link (navigation), drawn like the buttons. */
+.button-link {
+  display: inline-flex; align-items: center; min-height: 30px; padding: 0 var(--s3);
+  color: var(--ink); text-decoration: none; border: 1px solid var(--rule-strong); border-radius: var(--radius);
+  transition: border-color var(--motion);
+}
+.button-link:hover { border-color: var(--ink); }
+.button-link.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 500; }
+.link-row { display: flex; align-items: center; gap: var(--s4); }
+.meta { color: var(--muted); }
+
+/* Ruled rows: a plain list drawn as ledger lines (sites, sensors). */
+.rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule-strong); }
+.rows li { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s4); padding: var(--s2) var(--s3); min-height: 36px; border-bottom: 1px solid var(--rule); }
+.rows li:hover { background: var(--surface); }
+.row-meta { color: var(--muted); }
+
+/* A titled block inside a page (sensors, readings). */
+.block { display: grid; gap: var(--s4); padding-top: var(--s5); border-top: 1px solid var(--rule); }
+
+/* ============ Forms ============ */
+.form { display: grid; gap: var(--s4); max-width: 360px; }
+.field { display: grid; gap: var(--s1); }
+.field label, .filter-form label { font-size: 12.5px; color: var(--muted); }
+.field input { width: 100%; }
+.field-error { color: var(--danger); font-size: 13px; }
+.filter-form { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); }
+.filter-form .field-error { flex-basis: 100%; }
+
+/* ============ Home / not found ============ */
+.status-line { display: flex; align-items: center; gap: var(--s2); font-size: 16px; }
+.status-dot { width: 8px; height: 8px; background: var(--done); }
+.lead { max-width: 56ch; }

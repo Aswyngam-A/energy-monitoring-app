@@ -30,11 +30,13 @@ export default function SiteDetailPage() {
   if (error) return <ErrorMessage message={error} />;
 
   return (
-    <section>
+    <section className="page">
       <h2>{site?.name}</h2>
-      <p>Threshold: {site?.threshold}</p>
-      <Link to={`/sites/${id}/edit`}>Edit</Link>{' '}
-      <Link to="/sites">Back to sites</Link>
+      <p className="meta mono">Threshold: {site?.threshold}</p>
+      <div className="link-row">
+        <Link to={`/sites/${id}/edit`} className="button-link">Edit</Link>
+        <Link to="/sites">Back to sites</Link>
+      </div>
       {/* The site loaded successfully here, so its id is safe to use for the sensors. */}
       {site && <SensorsSection siteId={site.id} />}
       {site && <ReadingsSection siteId={site.id} />}

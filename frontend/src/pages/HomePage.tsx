@@ -17,8 +17,19 @@ export default function HomePage() {
       .finally(() => { setLoading(false); });
   }, []);
 
-  // Early returns: one page state at a time (loading, error, or the status below).
-  if (loading) return <LoadingState />;
-  if (error) return <ErrorMessage message={error} />;
-  return <p>API status: <strong>{health?.status}</strong></p>;
+  // The page heading stays in every state, so the screen never looks empty.
+  return (
+    <section className="page">
+      <h2>System status</h2>
+      {loading && <LoadingState />}
+      <ErrorMessage message={error} />
+      {!loading && !error && (
+        <p className="status-line"><span className="status-dot" aria-hidden="true" />API status: <strong>{health?.status}</strong></p>
+      )}
+      <p className="muted lead">
+        Sensors report readings for each site. EnergyWatch raises an alert when a reading passes the
+        site&apos;s threshold, and keeps it open until someone acknowledges and resolves it.
+      </p>
+    </section>
+  );
 }

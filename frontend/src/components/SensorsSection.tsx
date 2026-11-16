@@ -30,18 +30,18 @@ export default function SensorsSection({ siteId }: { siteId: number }) {
   }
 
   return (
-    <section>
+    <section className="block">
       <h3>Sensors</h3>
       {loading && <LoadingState label="sensors" />}
       <ErrorMessage message={error} />
-      {!loading && !error && sensors.length === 0 && <p>No sensors yet</p>}
+      {!loading && !error && sensors.length === 0 && <p className="empty">No sensors yet</p>}
       {sensors.length > 0 && (
-        <ul>
+        <ul className="rows">
           {sensors.map((sensor) => (
             <li key={sensor.id}>
               {sensor.name}
               {/* type is null when the sensor was created without one */}
-              {sensor.type && <span> ({sensor.type})</span>}
+              {sensor.type && <span className="row-meta"><small>({sensor.type})</small></span>}
             </li>
           ))}
         </ul>

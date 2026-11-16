@@ -34,7 +34,7 @@ export default function SiteEditPage() {
   if (error) return <ErrorMessage message={error} />;
 
   return (
-    <section>
+    <section className="page">
       <h2>Edit site</h2>
       <SiteForm
         // Only the editable fields are passed (not the id).
