@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { listAlerts, updateAlertStatus, type Alert, type AlertStatus } from '../api/alerts';
 import type { Page } from '../api/page';
 import Pagination from '../components/Pagination';
+import StatusChip from '../components/StatusChip';
 import { useAlerts } from '../context/AlertsContext';
 import { usePolling } from '../hooks/usePolling';
 import { formatTimestamp } from '../utils/dates';
@@ -77,10 +78,10 @@ export default function AlertsPage() {
   const alerts = result?.items ?? [];
 
   return (
-    <section>
+    <section className="page">
       <h2>Alerts</h2>
       {/* The filter stays visible in every state, so a failed load can be retried by changing it. */}
-      <label>
+      <label className="field-inline">
         Status{' '}
         <select value={filter} onChange={(e) => { handleFilterChange(e.target.value as StatusFilter); }}>
           {FILTER_OPTIONS.map((option) => (
@@ -91,16 +92,16 @@ export default function AlertsPage() {
       <ErrorMessage message={actionError} />
       {loading && <LoadingState label="alerts" />}
       <ErrorMessage message={error} />
-      {!loading && !error && alerts.length === 0 && <p>No alerts</p>}
+      {!loading && !error && alerts.length === 0 && <p className="empty">All quiet. No alerts here.</p>}
       {!loading && !error && alerts.length > 0 && (
-        <table>
+        <div className="table-wrap"><table className="ledger">
           <thead>
             <tr>
               <th>Time (UTC)</th>
               <th>Site</th>
               <th>Sensor</th>
-              <th>Value (kW)</th>
-              <th>Threshold (kW)</th>
+              <th className="num">Value (kW)</th>
+              <th className="num">Threshold (kW)</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -108,14 +109,14 @@ export default function AlertsPage() {
           <tbody>
             {alerts.map((alert) => (
               <tr key={alert.id}>
-                <td>{formatTimestamp(alert.createdAt)}</td>
+                <td className="mono">{formatTimestamp(alert.createdAt)}</td>
                 {/* The alert carries the names, so they are shown; the id is only used for the link. */}
                 <td><Link to={`/sites/${alert.siteId}`}>{alert.siteName}</Link></td>
                 <td>{alert.sensorName}</td>
-                <td>{alert.value}</td>
-                <td>{alert.threshold}</td>
-                <td>{alert.status}</td>
-                <td>
+                <td className="num mono over">{alert.value}</td>
+                <td className="num mono">{alert.threshold}</td>
+                <td><StatusChip status={alert.status} /></td>
+                <td className="actions">
                   {/* Only the moves the backend allows are offered; RESOLVED is final, so no buttons. */}
                   {alert.status === 'OPEN' && (
                     <button onClick={() => { void handleChange(alert.id, 'ACKNOWLEDGED'); }}
@@ -129,7 +130,7 @@ export default function AlertsPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
       {result && !error && (
         <Pagination page={page} size={result.size} total={result.total} onPageChange={setPage} />
