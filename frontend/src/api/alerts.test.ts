@@ -1,7 +1,7 @@
 // Unit tests for the alerts API client. The Axios client is mocked, so no network is used:
 // we only check which URL and query parameters it sends and what it returns.
 import client from './client';
-import { listAlerts } from './alerts';
+import { listAlerts, updateAlertStatus } from './alerts';
 
 jest.mock('./client');
 
@@ -27,4 +27,12 @@ test('listAlerts sends siteId as a query parameter to keep one site', async () =
   jest.mocked(client.get).mockResolvedValue({ data: [] });
   await listAlerts(7);
   expect(client.get).toHaveBeenCalledWith('/alerts', { params: { siteId: 7 } });
+});
+
+test('updateAlertStatus PATCHes the status to /alerts/{id} and returns the updated alert', async () => {
+  const updated = { ...alert, status: 'ACKNOWLEDGED' };
+  jest.mocked(client.patch).mockResolvedValue({ data: updated });
+  const result = await updateAlertStatus(1, 'ACKNOWLEDGED');
+  expect(client.patch).toHaveBeenCalledWith('/alerts/1', { status: 'ACKNOWLEDGED' });
+  expect(result).toEqual(updated);
 });

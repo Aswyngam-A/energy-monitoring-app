@@ -51,3 +51,20 @@ test('shows no badge when there are no alerts', async () => {
   await screen.findByRole('link', { name: /alerts/i });
   expect(screen.queryByLabelText(/open alerts/i)).not.toBeInTheDocument();
 });
+
+test('the badge counts only OPEN alerts, not acknowledged or resolved ones', async () => {
+  jest.mocked(alertsApi.listAlerts).mockResolvedValue([
+    alert(3, 'RESOLVED'), alert(2, 'ACKNOWLEDGED'), alert(1, 'OPEN'),
+  ]);
+  renderLayout();
+
+  expect(await screen.findByLabelText('1 open alerts')).toBeInTheDocument();
+});
+
+test('no badge when every alert is already handled', async () => {
+  jest.mocked(alertsApi.listAlerts).mockResolvedValue([alert(2, 'RESOLVED'), alert(1, 'ACKNOWLEDGED')]);
+  renderLayout();
+
+  await screen.findByRole('link', { name: /alerts/i });
+  expect(screen.queryByLabelText(/open alerts/i)).not.toBeInTheDocument();
+});
