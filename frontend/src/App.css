@@ -98,8 +98,21 @@ input, select {
 }
 input:hover, select:hover { border-color: var(--ink); }
 input[aria-invalid='true'] { border-color: var(--danger); }
-/* One clear focus ring: the control's own border turns teal and the outline hugs it (no double line). */
-input:focus-visible, select:focus-visible { outline-offset: 0; border-color: var(--accent); }
+/* One clear focus ring: the border turns teal and a 1px shadow thickens it to 2px, so there is a
+   single solid line instead of a border plus an offset outline. The transparent outline is only
+   there so the focus still shows in forced-colours (high contrast) mode, which ignores shadows. */
+input:focus-visible, select:focus-visible {
+  outline: 1px solid transparent; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* Select: drop the browser's own look (it differs per OS and ignores our theme) and draw a small
+   chevron instead. The chevron is a neutral grey that reads on both the light and dark surface.
+   The list that opens is still the browser's native one, which keeps keyboard and screen readers working. */
+select {
+  appearance: none; min-width: 140px; padding-right: var(--s5); cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none' stroke='%238a857b' stroke-width='1.5'%3E%3Cpath d='m1 1 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right var(--s2) center;
+}
 
 /* ============ Dashboard ============ */
 /* Ledger tiles: one hairline grid, cells share their borders instead of floating as cards. */
