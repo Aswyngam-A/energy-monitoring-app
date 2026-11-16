@@ -15,7 +15,10 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST endpoints for alerts, served under /api/v1/alerts.
@@ -27,30 +30,44 @@ import java.util.List;
 public class AlertResource {
 
     /**
-     * GET /alerts?siteId=: every alert, newest first, or only those of one site when siteId is given.
+     * GET /alerts?siteId=&status=: every alert, newest first, optionally narrowed to one site
+     * and/or one status; the filters combine (both must match).
      * 404 if the site does not exist (so "unknown site" is not confused with "site without alerts",
-     * which is an empty list).
+     * which is an empty list); 400 for a malformed siteId or an unknown status.
      */
     @GET
-    public List<AlertResponse> list(@QueryParam("siteId") String siteIdText) {
-        // Read as text and parse here: if the parameter were declared as Long, a value like
-        // "abc" would make JAX-RS answer 404 (its rule for failed query-parameter conversion),
-        // but a malformed input is the client's mistake, so it must be a 400.
+    public List<AlertResponse> list(@QueryParam("siteId") String siteIdText,
+                                    @QueryParam("status") String statusText) {
+        // Read as text and parse here: if siteId were declared as Long, a value like "abc" would
+        // make JAX-RS answer 404 (its rule for failed query-parameter conversion), but a
+        // malformed input is the client's mistake, so it must be a 400. Same for the status.
         Long siteId = parseSiteId(siteIdText);
+        AlertStatus status = parseStatus(statusText);
+
+        if (siteId != null && Site.findById(siteId) == null) {
+            throw new NotFoundException("Site " + siteId + " not found");
+        }
 
         // Newest first; id breaks ties so alerts created at the same instant keep a stable order.
         Sort newestFirst = Sort.descending("createdAt", "id");
 
-        List<Alert> alerts;
-        if (siteId == null) {
-            alerts = Alert.listAll(newestFirst);
-        } else {
-            if (Site.findById(siteId) == null) {
-                throw new NotFoundException("Site " + siteId + " not found");
-            }
-            // "site.id" navigates the relation in the query, so the filter runs in the database.
-            alerts = Alert.list("site.id", newestFirst, siteId);
+        // Build the WHERE clause from the filters that were given. The conditions are fixed
+        // strings (never client text); the values travel as parameters. "site.id" navigates the
+        // relation, so the filtering runs in the database.
+        List<String> conditions = new ArrayList<>();
+        Map<String, Object> params = new HashMap<>();
+        if (siteId != null) {
+            conditions.add("site.id = :siteId");
+            params.put("siteId", siteId);
         }
+        if (status != null) {
+            conditions.add("status = :status");
+            params.put("status", status);
+        }
+
+        List<Alert> alerts = conditions.isEmpty()
+            ? Alert.listAll(newestFirst)
+            : Alert.list(String.join(" and ", conditions), newestFirst, params);
 
         return alerts.stream().map(AlertResponse::from).toList();
     }
@@ -87,6 +104,18 @@ public class AlertResource {
             return Long.valueOf(text.trim());
         } catch (NumberFormatException e) {
             throw new BadRequestException("siteId must be a number");
+        }
+    }
+
+    /** Parses the optional status: absent or blank stays null (no filter), an unknown name becomes a 400. */
+    private static AlertStatus parseStatus(String text) {
+        if (text == null || text.isBlank()) {
+            return null;
+        }
+        try {
+            return AlertStatus.valueOf(text.trim());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("status must be one of OPEN, ACKNOWLEDGED, RESOLVED");
         }
     }
 }

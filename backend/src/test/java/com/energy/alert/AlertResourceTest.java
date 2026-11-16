@@ -163,6 +163,63 @@ class AlertResourceTest {
             .body("status", is(400));
     }
 
+    // ---- GET /alerts?status= ----
+
+    private ValidatableResponse getByStatus(String siteId, String status) {
+        var request = given();
+        if (siteId != null) request = request.queryParam("siteId", siteId);
+        if (status != null) request = request.queryParam("status", status);
+        return request.when().get(PATH).then();
+    }
+
+    @Test
+    void statusKeepsOnlyAlertsInThatStatus() {
+        Ids ids = insertSiteWithSensor("A");
+        insertAlert(ids, "110", "2024-05-01T10:00:00Z", AlertStatus.OPEN);
+        insertAlert(ids, "120", "2024-05-01T11:00:00Z", AlertStatus.ACKNOWLEDGED);
+        insertAlert(ids, "130", "2024-05-01T12:00:00Z", AlertStatus.RESOLVED);
+
+        getByStatus(null, "ACKNOWLEDGED").statusCode(200).body("value", contains(120f));
+        getByStatus(null, "OPEN").statusCode(200).body("value", contains(110f));
+        getByStatus(null, "RESOLVED").statusCode(200).body("value", contains(130f));
+    }
+
+    @Test
+    void statusAndSiteIdCombine() {
+        Ids a = insertSiteWithSensor("A");
+        Ids b = insertSiteWithSensor("B");
+        insertAlert(a, "110", "2024-05-01T10:00:00Z", AlertStatus.OPEN);
+        insertAlert(a, "120", "2024-05-01T11:00:00Z", AlertStatus.RESOLVED);
+        insertAlert(b, "130", "2024-05-01T12:00:00Z", AlertStatus.OPEN);
+
+        // Only site A's OPEN alert: both filters apply.
+        getByStatus(String.valueOf(a.siteId()), "OPEN").statusCode(200).body("value", contains(110f));
+    }
+
+    @Test
+    void statusWithNoMatchReturnsAnEmptyArray() {
+        Ids ids = insertSiteWithSensor("A");
+        insertAlert(ids, "110", "2024-05-01T10:00:00Z", AlertStatus.OPEN);
+
+        getByStatus(null, "RESOLVED").statusCode(200).body("size()", is(0));
+    }
+
+    @Test
+    void withoutStatusEveryStatusIsListed() {
+        Ids ids = insertSiteWithSensor("A");
+        insertAlert(ids, "110", "2024-05-01T10:00:00Z", AlertStatus.OPEN);
+        insertAlert(ids, "120", "2024-05-01T11:00:00Z", AlertStatus.RESOLVED);
+
+        getByStatus(null, null).statusCode(200).body("size()", is(2));
+        // A blank value counts as "not given", like a blank siteId.
+        getByStatus(null, "").statusCode(200).body("size()", is(2));
+    }
+
+    @Test
+    void unknownStatusReturns400() {
+        getByStatus(null, "EXPLODED").statusCode(400).body("status", is(400));
+    }
+
     // ---- PATCH /alerts/{id} ----
 
     private ValidatableResponse patch(Object alertId, String body) {

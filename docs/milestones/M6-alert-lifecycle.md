@@ -38,3 +38,4 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 - 2026-11-16 — Step 1 done: enum values, `AlertTransitions` + 8 unit tests; verify green (84 unit + 2 IT).
 - 2026-11-16 — Step 2 done: PATCH /alerts/{id} (200/400/404), 9 tests; verify green (93 unit + 2 IT).
 - 2026-11-16 — Step 3 done: dedup per sensor in AlertService, 4 new ingestion tests replacing the pre-M6 one; all checks green (96 unit + 2 IT, 77 frontend, 16 e2e).
+- 2026-11-16 — Step 4 done: GET /alerts?status= (combines with siteId), 5 tests; all checks green (101 unit + 2 IT, 77 frontend, 16 e2e). Backend complete.
