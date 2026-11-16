@@ -1,6 +1,6 @@
 # M6 — Alert lifecycle
 
-**Status:** Not started
+**Status:** In progress
 
 ## Goal
 Alerts can be acknowledged and resolved, filtered by status, and repeated breaches don't flood the list.
@@ -33,3 +33,5 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 
 ## Status log
 - 2026-11-11 — Created.
+- 2026-11-16 — Started. Decisions: (1) dedup = one active alert per sensor: a breaching reading creates no new alert while that sensor has an alert that is OPEN or ACKNOWLEDGED; once it is RESOLVED the next breach raises a new one (the reading is still stored). (2) No reopening: RESOLVED is final. Transitions: OPEN->ACKNOWLEDGED, OPEN->RESOLVED, ACKNOWLEDGED->RESOLVED; anything else (incl. same status) -> 400.
+- Plan: 1 `AlertStatus` + pure `AlertTransitions` rule + unit tests; 2 `PATCH /alerts/{id}` (200/400/404); 3 dedup in `AlertService`; 4 `GET /alerts?status=`; 5 frontend API client (`updateAlertStatus`, status param) + alerts page buttons and filter (refetch after change, badge counts only OPEN so the shared state needs a refresh); 6 e2e + close-out.

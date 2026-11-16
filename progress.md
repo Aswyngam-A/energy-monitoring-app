@@ -1,6 +1,6 @@
 # EnergyWatch — Progress
 
-**Current milestone:** M6 — Alert lifecycle, not started
+**Current milestone:** M6 — Alert lifecycle, in progress (planning done, step 1 next)
 
 ## How we work
 - **L — Learning mode** (first time a concept appears): Claude explains what/why/which files/new concepts step by step. You write the code. Claude reviews and explains each mistake.
@@ -19,7 +19,7 @@
 | M3 | Sensors | Done | [docs/milestones/M3-sensors.md](docs/milestones/M3-sensors.md) |
 | M4 | Readings ingestion | Done | [docs/milestones/M4-readings.md](docs/milestones/M4-readings.md) |
 | M5 | Alerts | Done | [docs/milestones/M5-alerts.md](docs/milestones/M5-alerts.md) |
-| M6 | Alert lifecycle | Not started | [docs/milestones/M6-alert-lifecycle.md](docs/milestones/M6-alert-lifecycle.md) |
+| M6 | Alert lifecycle | In progress | [docs/milestones/M6-alert-lifecycle.md](docs/milestones/M6-alert-lifecycle.md) |
 | M7 | Dashboard + hardening | Not started | [docs/milestones/M7-dashboard-hardening.md](docs/milestones/M7-dashboard-hardening.md) |
 
 ## Open questions (decide when the milestone needs them)
@@ -35,7 +35,7 @@
 | Sensor auth: none (decided 2026-11-15) | M3 |
 | Reading units (kW by convention, not stored); timestamp optional from client, default server time, UTC `Instant`; reject > 5 min in the future, accept old (decided 2026-11-15) | M4 ✓ |
 | Threshold comparison: strictly `>`; per-site only, no sensor override (decided 2026-11-16) | M5 ✓ |
-| Alert dedup: one per reading or one open per sensor | M6 |
+| Alert dedup: one active (OPEN/ACKNOWLEDGED) alert per sensor; RESOLVED is final, no reopen (decided 2026-11-16) | M6 ✓ |
 | Chart library | M7 |
 | "3 attempts" rule: per check or per task? | Any time |
 
