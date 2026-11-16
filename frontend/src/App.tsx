@@ -8,6 +8,7 @@ import SiteDetailPage from './pages/SiteDetailPage';
 import SiteNewPage from './pages/SiteNewPage';
 import SiteEditPage from './pages/SiteEditPage';
 import AlertsPage from './pages/AlertsPage';
+import DashboardPage from './pages/DashboardPage';
 import { AlertsProvider } from './context/AlertsContext';
 
 /** The route table: which page shows for which URL. All routes share the Layout frame. */
@@ -23,6 +24,7 @@ function App() {
         <Route path="/sites/new" element={<SiteNewPage />} />
         <Route path="/sites/:id" element={<SiteDetailPage />} />
         <Route path="/sites/:id/edit" element={<SiteEditPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/alerts" element={<AlertsPage />} />
         {/* Catch-all: must stay last. */}
         <Route path="*" element={<NotFoundPage />} />

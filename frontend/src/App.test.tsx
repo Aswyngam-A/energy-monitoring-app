@@ -3,11 +3,13 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import * as healthApi from './api/health';
 import * as alertsApi from './api/alerts';
+import * as dashboardApi from './api/dashboard';
 import App from './App';
 import { pageOf } from './testUtils';
 
 jest.mock('./api/health');
 jest.mock('./api/alerts');
+jest.mock('./api/dashboard');
 
 // App now loads alerts for the nav badge on every route, so every test needs the API stubbed.
 beforeEach(() => {
@@ -40,4 +42,14 @@ render(
   </MemoryRouter>
 );
 expect(await screen.findByRole('heading', { name: 'Alerts' })).toBeInTheDocument();
+});
+
+test('the /dashboard route shows the dashboard page', async () => {
+  jest.mocked(dashboardApi.getDashboardSummary).mockResolvedValue([]);
+  render(
+    <MemoryRouter initialEntries={['/dashboard']}>
+      <App />
+    </MemoryRouter>
+  );
+  expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
 });

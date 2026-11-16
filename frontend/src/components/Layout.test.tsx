@@ -38,6 +38,11 @@ test('has a navigation link to the alerts page', async () => {
   expect(await screen.findByRole('link', { name: /alerts/i })).toHaveAttribute('href', '/alerts');
 });
 
+test('has a navigation link to the dashboard', async () => {
+  renderLayout();
+  expect(await screen.findByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/dashboard');
+});
+
 test('shows the number of OPEN alerts as a badge on the Alerts link', async () => {
   jest.mocked(alertsApi.listAlerts).mockResolvedValue(openAlerts(2));
   renderLayout();

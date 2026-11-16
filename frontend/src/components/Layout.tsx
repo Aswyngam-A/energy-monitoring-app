@@ -12,6 +12,7 @@ export default function Layout() {
         <h1>EnergyWatch</h1>
         <nav>
           <NavLink to="/">Home</NavLink>
+          <NavLink to="/dashboard">Dashboard</NavLink>
           <NavLink to="/sites">Sites</NavLink>
           <NavLink to="/alerts">
             Alerts
