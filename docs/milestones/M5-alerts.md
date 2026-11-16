@@ -37,3 +37,4 @@ All three CLAUDE.md checks green, output pasted, progress.md updated.
 - 2026-11-16 — Step 1 done: `ThresholdRule` + 8 plain-JUnit tests; verify green.
 - 2026-11-16 — Step 2 done: `Alert` entity, `AlertStatus` (OPEN), `V4` migration, `AlertTest`; verify green.
 - 2026-11-16 — Step 3 done: `AlertService` + `ReadingService` (ingestion raises alerts, one transaction), resource slimmed to HTTP concerns, 6 integration tests; verify green.
+- 2026-11-16 — Step 4 done: GET /alerts?siteId= (newest first, 400 / 404), `AlertResponse`, 7 tests; verify green. Backend complete. Note: a failed `@QueryParam Long` conversion gives 404, so the id is parsed by hand.
