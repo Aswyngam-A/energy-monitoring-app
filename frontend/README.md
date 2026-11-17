@@ -1,75 +1,31 @@
-# React + TypeScript + Vite
+# EnergyWatch frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The React + TypeScript + Vite app of EnergyWatch. The project overview, screenshots, quick start and
+architecture are in the [root README](../README.md).
 
-Currently, two official plugins are available:
+## Working on the frontend
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+npm run dev      # Vite dev server; /api is proxied to the backend on http://localhost:8080
+npm run check    # lint + type check + Jest (run this before every commit)
+npm run build    # type check and production build into dist/
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+For the full stack (database, API and this app behind nginx on http://localhost:3000), run
+`docker compose up -d --build` from the repository root.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Where things live
 
 ```
+src/pages/        one component per route (Home, Dashboard, Sites, Alerts...)
+src/components/   shared pieces (Layout, Pagination, StatusChip, Sparkline, ReadingsChart...)
+src/api/          typed wrappers around the backend endpoints (one module per resource)
+src/hooks/        usePolling (30 s refresh), useTheme (light/dark)
+src/context/      AlertsContext: the open-alert count shared by the nav and the Alerts page
+src/index.css     design tokens (colours, spacing, fonts) for both themes
+src/App.css       component styles, using only those tokens
+src/siteInfo.ts   links shown on the Home page (source code, contact)
+```
+
+Tests sit next to the code they cover (`*.test.ts(x)`); the browser tests are in `../e2e`.
