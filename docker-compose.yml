@@ -36,5 +36,21 @@ services:
     depends_on:
       - api
 
+  # Optional, off by default (a "profile"): keeps the demo alive. Every 30 s it sends fresh readings
+  # for the demo factory through the web service (the same path a browser uses) and acts as an
+  # operator who handles old alerts. Needs the demo sites: run scripts/seed_demo.py once first.
+  #   start:  docker compose --profile demo up -d        stop:  docker compose --profile demo stop simulator
+  # The e2e stack never starts it (no profile is enabled there), so tests keep their own clean data.
+  simulator:
+    profiles: ["demo"]
+    image: python:3.12-alpine
+    volumes:
+      - ./scripts:/scripts:ro
+    command: ["python", "/scripts/simulate_readings.py", "http://web"]
+    # Comes back after a crash or a Docker restart; it also copes with the app not being up yet.
+    restart: unless-stopped
+    depends_on:
+      - web
+
 volumes:
   energywatch-db-data:
