@@ -116,6 +116,8 @@
 
 - **Demo data note on Home** (2026-11-17): a short note under the live numbers says the sites, sensors and readings are made up and a simulator sends new readings every 30 s, so nobody takes them for real consumption. Test first (`HomePage.test.tsx`). Verified: `npm run check` 163 tests, `npm run test:fresh` (see below), web container rebuilt.
 
+- **README with screenshots** (2026-11-17): root `README.md` (what it is, quick start, six screenshots, architecture diagram, API table, test commands, design decisions, layout, limits). Screenshots in `docs/screenshots/` were captured headlessly with Playwright from the running demo (`dashboard`, `dashboard-dark`, `dashboard-mobile`, `alerts`, `home`, `site`); retake them after big UI changes. Every claim was checked against the code. Note: `frontend/README.md` is still the untouched Vite template text.
+
 ## Known issues / blocked
 - ~~Site readings list unbounded~~ → fixed in M7 (sites, readings and alerts are paginated).
 - **Polish backlog** (none blocking; agreed 2026-11-16, in this order):
