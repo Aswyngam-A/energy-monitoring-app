@@ -8,4 +8,4 @@ export const REPO_URL = 'https://github.com/Aswyngam-A/energy-monitoring-app';
  * PLACEHOLDER: replace with a real contact, either "mailto:you@yourdomain.com" or a profile link
  * such as "https://www.linkedin.com/in/your-name". The home page link just points here.
  */
-export const CONTACT_URL = 'mailto:your.name@example.com';
+export const CONTACT_URL = 'https://www.linkedin.com/in/amel-maouchi-919a78196/';
