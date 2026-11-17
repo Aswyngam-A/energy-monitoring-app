@@ -118,6 +118,8 @@
 
 - **README with screenshots** (2026-11-17): root `README.md` (what it is, quick start, six screenshots, architecture diagram, API table, test commands, design decisions, layout, limits). Screenshots in `docs/screenshots/` were captured headlessly with Playwright from the running demo (`dashboard`, `dashboard-dark`, `dashboard-mobile`, `alerts`, `home`, `site`); retake them after big UI changes. Every claim was checked against the code. Note: `frontend/README.md` is still the untouched Vite template text.
 
+- **README: CI badge, AI section, template cleanup** (2026-11-17): the README got a CI badge under the title (workflow `ci.yml`, branch main) and a "How this was built with AI" section (the CLAUDE.md rules and how one of them was relaxed, the feedback loop, learning vs shared mode vs feedback loop with who wrote what, what the author reviews, links to this log and the milestone notes). Deleted unused template files: `backend/README.md` (default Quarkus text), `backend/src/main/docker/Dockerfile.jvm`, `.legacy-jar`, `.native`, `.native-micro` (the app builds with its own `backend/Dockerfile`, which stays) and `frontend/public/icons.svg` (Vite starter icon sprite, referenced nowhere). Old milestone notes still mention `Dockerfile.jvm` as history. Verified: `./mvnw verify` green, `npm run check` 163 tests, `npm run build` ok; the Docker builds and e2e run in CI.
+
 ## Known issues / blocked
 - ~~Site readings list unbounded~~ → fixed in M7 (sites, readings and alerts are paginated).
 - **Polish backlog** (none blocking; agreed 2026-11-16, in this order):

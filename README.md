@@ -1,5 +1,7 @@
 # EnergyWatch
 
+[![CI](https://github.com/Aswyngam-A/energy-monitoring-app/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Aswyngam-A/energy-monitoring-app/actions/workflows/ci.yml)
+
 Energy monitoring for a company with several sites. Sensors send power readings, the API compares every
 reading with its site's limit, raises an **alert** the moment one goes over, and tracks that alert until
 someone has dealt with it. A React dashboard shows what is happening, live.
@@ -117,6 +119,70 @@ built test-first: each feature starts with a failing test.
 - **Design.** A "control-room ledger" look: flat surfaces, hairline rules, tabular numerals, one accent colour
   and amber/blue/green reserved for alert states. Colours, spacing and fonts are CSS variables, so a theme is
   just another set of values.
+
+## How this was built with AI
+
+This project was built with [Claude Code](https://claude.com/claude-code) as a pair programmer, on purpose
+and in the open: the goal was to learn Quarkus, React, Docker and CI properly *and* to ship something that
+works. The way of working is written down, and every decision is in the project log.
+
+### The rules the AI works under
+
+They live in [`CLAUDE.md`](CLAUDE.md), which the AI reads at the start of every session:
+
+- **Tests first.** For every feature, write the failing test, then the code until it passes.
+- **Done means all checks green**, not "it compiles": `./mvnw verify`, `npm run check` (lint, type check and
+  Jest) and the Playwright end-to-end suite, with the output shown.
+- **Three strikes.** If the same check still fails after three attempts, stop and explain what was tried.
+- **Small, focused changes.** No unrelated refactors.
+- **Never weaken or delete a test to make it pass.** Fix the code or ask. A test is only replaced when the
+  rule itself changed by decision, and the reason is written next to it.
+- **Keep the record.** `progress.md` and the milestone file are updated at the end of every task.
+- **Comment the code** so a later reader gets the purpose and the reasons, not just the lines.
+
+One rule changed along the way: it began as "never commit or push without my approval". Once the loop was
+trusted, I allowed commits and pushes after every green step. It still asks first for anything hard to undo:
+force-pushes, rewriting history, deleting branches, pull requests, or anything that looks like a secret.
+
+### The feedback loop
+
+1. The AI writes the **failing tests** for a small step.
+2. It writes the code until they pass.
+3. It runs **every** check: backend tests, lint, type check, frontend tests and the browser tests.
+4. It commits and pushes, then waits for **CI** (backend, frontend and end-to-end jobs) and reports the result.
+
+The loop earns its keep. Two examples from the log: running the demo simulator against the real API
+exposed a timestamp format the unit tests never used, and CI caught an end-to-end test that had passed
+locally only by luck of timing (a new "Updated" line also matched a text search for `UP`).
+
+### Learning mode, shared mode, then the feedback loop
+
+I did not hand everything over from the first minute:
+
+| Phase | Who wrote what |
+|---|---|
+| **Learning mode** (first time a concept appeared: milestones M1 to M2) | The AI explained what and why, and I wrote the code. It reviewed my work and explained each mistake. The infrastructure (Dockerfiles, Compose, CI, Playwright setup) was written by me this way. |
+| **Shared mode** (a concept seen before) | The AI wrote the structure with `// TODO`s. I wrote the business logic and at least one test. |
+| **Feedback loop** (from milestone M2 step 5, 2026-11-15) | The AI writes the tests, then the code. After every step it lists the concepts to study on my own, outside the project, and I keep studying in parallel. |
+
+So most of the code from the Sites feature onward was written by the AI, under the rules above. The
+early milestones and the infrastructure are where I wrote the code myself.
+
+### What I review
+
+Green checks are necessary, not sufficient. What stays with me:
+
+- **Decisions.** What gets built, in what order, and the trade-offs. For the design pass I chose every
+  option one decision at a time (style, palette, type, layout, motion, themes, icons) and approved a written
+  brief and plan before any code. Open questions (such as how to stop e2e tests from filling the dev
+  database) are put to me, not decided silently.
+- **The running app.** I use it, not just the test output. Real problems found that way: content hugging
+  the left edge on a wide screen, a misaligned table column, an ugly select control.
+- **Anything destructive or public.** Deleting data and publishing a personal link were explicit
+  approvals, never side effects.
+- **The record.** CI results after every push, and [`progress.md`](progress.md): what was built, why, and
+  what was verified, including the mistakes and fixes. The per-milestone plans are in
+  [`docs/milestones/`](docs/milestones).
 
 ## Repository layout
 
