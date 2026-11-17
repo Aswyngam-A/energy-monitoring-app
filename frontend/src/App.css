@@ -226,3 +226,7 @@ select {
 .columns h4 { margin: 0 0 var(--s2); font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; }
 .plain { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--s2); }
 .status-dot[data-ok='false'] { background: var(--rule-strong); }
+
+/* Small explanatory note under a block of figures. */
+.note { max-width: 68ch; padding-left: var(--s3); border-left: 2px solid var(--rule-strong); color: var(--muted); font-size: 13px; }
+.note strong { color: var(--ink); }

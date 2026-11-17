@@ -129,3 +129,13 @@ test('the live numbers refresh every 30 seconds', async () => {
     jest.useRealTimers();
   }
 });
+
+// ---- Honest labelling of the demo ----
+test('says the data is a simulated demo, so nobody takes it for real consumption', async () => {
+  renderHome();
+
+  // The bold lead-in is its own element; the sentence to check is its whole paragraph.
+  const note = (await screen.findByText('Demo data.')).closest('p')!;
+  expect(note).toHaveTextContent(/made up/i);
+  expect(note).toHaveTextContent(/simulat/i);
+});

@@ -85,6 +85,12 @@ export default function HomePage() {
         <ErrorMessage message={numbersError} />
       </section>
 
+      {/* Honest labelling: the numbers above come from a simulator, not from real meters. */}
+      <p className="note">
+        <strong>Demo data.</strong> The sites, sensors and readings are made up (a medicines manufacturer)
+        and a simulator sends new readings every 30 seconds. Nothing here is real consumption.
+      </p>
+
       <section className="block">
         <h3>How it works</h3>
         <ol aria-label="How it works" className="steps">
